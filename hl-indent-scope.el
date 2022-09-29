@@ -307,9 +307,10 @@ Argument CACHE-EMPTY-LINE-STR stores the empty string."
                 (let ((pos-end (car (pop stops))))
                   (while stops
                     (pcase-let ((`(,pos-beg . ,face) (pop stops)))
-                      ;; (let ((pos-beg (pop stops)))
-                      (put-text-property pos-beg pos-end 'font-lock-face face ov-str)
-                      (setq pos-end pos-beg))))
+                      ;; Unlikely but badly indented files can have stops that go backwards.
+                      (when (< pos-beg pos-end)
+                        (put-text-property pos-beg pos-end 'font-lock-face face ov-str)
+                        (setq pos-end pos-beg)))))
                 (setcar cache-empty-line-str ov-str))))
 
           (let ((ov (make-overlay pos-bol pos-bol)))
@@ -336,12 +337,14 @@ Argument CACHE-EMPTY-LINE-STR stores the empty string."
                   (setq pos-beg (+ pos-beg pos-bol))
                   (when (< pos-beg pos-whitespace)
                     (setq pos-end (min pos-whitespace pos-end))
-                    ;; (put-text-property pos-beg pos-end 'font-lock-face face)
-                    (let ((ov (make-overlay pos-beg pos-end)))
-                      (overlay-put ov 'face face)
-                      (overlay-put ov 'evaporate t)
-                      (overlay-put ov 'hl-indent-scope t)))
-                  (setq pos-end pos-beg))))))))))
+                    ;; Unlikely but badly indented files can have stops that go backwards.
+                    (when (< pos-beg pos-end)
+                      ;; (put-text-property pos-beg pos-end 'font-lock-face face)
+                      (let ((ov (make-overlay pos-beg pos-end)))
+                        (overlay-put ov 'face face)
+                        (overlay-put ov 'evaporate t)
+                        (overlay-put ov 'hl-indent-scope t))
+                      (setq pos-end pos-beg))))))))))))
 
 (defun hl-indent-scope--font-lock-tree-impl (all-beg all-end tree level stops cache-empty-line-str)
   "Implement full buffer font locking of indentation levels.
