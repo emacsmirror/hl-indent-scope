@@ -210,9 +210,12 @@ Commands before BEG may be included depending on expansion."
   "Non-nil when the point at POS is part of a multi-line string.
 Where the string starts before LIMIT."
   (let ((state (syntax-ppss pos)))
+    ;; This is a string.
     (when (nth 3 state)
-      (let ((beg-pos (nth 2 state)))
-        (and beg-pos (< beg-pos limit))))))
+      (let ((string-beg (nth 2 state)))
+        ;; Check if the string starts before the limit (the line beginning)
+        ;; Making this a multi-line string.
+        (and string-beg (< string-beg limit))))))
 
 (defsubst hl-indent-scope-preset-python--is-space-at-point (pos)
   "Non-nil when the point at POS is any white-space."
