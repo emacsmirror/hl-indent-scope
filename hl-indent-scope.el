@@ -621,7 +621,7 @@ when checking the entire buffer for example."
                   (delete-overlay item-ov))))))))))
 
 (defun hl-indent-scope--idle-handle-pending-ranges-timer-callback (buf)
-  "Callback that run the repeat timer."
+  "Callback that run the repeat timer for buffer BUF."
   (when (buffer-live-p buf)
     (with-current-buffer buf
       (when (bound-and-true-p hl-indent-scope-mode)
@@ -704,7 +704,7 @@ when checking the entire buffer for example."
 ;; ---------------------------------------------------------------------------
 ;; Internal Mode Management
 
-(defun hl-indent-scope-mode-enable ()
+(defun hl-indent-scope--mode-enable ()
   "Turn on `hl-indent-scope-mode' for the current buffer."
   ;; Batch mode, colors don't make sense (for testing).
   (unless noninteractive
@@ -735,7 +735,7 @@ when checking the entire buffer for example."
     (t
       (hl-indent-scope--idle-enable))))
 
-(defun hl-indent-scope-mode-disable ()
+(defun hl-indent-scope--mode-disable ()
   "Turn off `hl-indent-scope-mode' for the current buffer."
 
   (remove-overlays (point-min) (point-max) 'hl-indent-scope t)
@@ -748,7 +748,7 @@ when checking the entire buffer for example."
     (t
       (hl-indent-scope--idle-disable))))
 
-(defun hl-indent-scope-mode-turn-on ()
+(defun hl-indent-scope--mode-turn-on ()
   "Enable command `hl-indent-scope-mode'."
   (when (and (not (minibufferp)) (not (bound-and-true-p hl-indent-scope-mode)))
     (hl-indent-scope-mode 1)))
@@ -769,15 +769,15 @@ when checking the entire buffer for example."
   :global nil
   (cond
     (hl-indent-scope-mode
-      (hl-indent-scope-mode-enable))
+      (hl-indent-scope--mode-enable))
     (t
-      (hl-indent-scope-mode-disable))))
+      (hl-indent-scope--mode-disable))))
 
 ;;;###autoload
 (define-globalized-minor-mode
   global-hl-indent-scope-mode
 
-  hl-indent-scope-mode hl-indent-scope-mode-turn-on)
+  hl-indent-scope-mode hl-indent-scope--mode-turn-on)
 
 (provide 'hl-indent-scope)
 ;; Local Variables:
