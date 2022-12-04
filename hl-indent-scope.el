@@ -626,7 +626,8 @@ when checking the entire buffer for example."
     (with-current-buffer buf
       (when (bound-and-true-p hl-indent-scope-mode)
         (hl-indent-scope--idle-handle-pending-ranges-impl)
-        (cancel-timer hl-indent-scope--idle-timer))
+        (when hl-indent-scope--idle-timer
+          (cancel-timer hl-indent-scope--idle-timer)))
       (kill-local-variable 'hl-indent-scope--idle-timer))))
 
 (defun hl-indent-scope--idle-font-lock-region-pending (pos-beg pos-end)
