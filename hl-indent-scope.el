@@ -601,7 +601,7 @@ when checking the entire buffer for example."
               pos-beg pos-end)
 
             (when
-              (condition-case err
+              (condition-case-unless-debug err
                 ;; Needed so the idle timer won't quit mid-spelling.
                 (let ((inhibit-quit nil))
                   (hl-indent-scope--font-lock-tree pos-beg pos-end)
