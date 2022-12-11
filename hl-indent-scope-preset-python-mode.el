@@ -18,21 +18,22 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'hl-indent-scope))
+(eval-when-compile
+  (require 'hl-indent-scope))
 
 (defconst hl-indent-scope-preset-python--block-commands
   (concat
-    "\\_<"
-    ;; Commands with arguments:
-    "\\(if\\|elif\\|while\\|for\\|def\\|class\\|except\\|with\\|match\\|case\\)"
-    ;; Trailing space & parenthesis.
-    "\\_>"
+   "\\_<"
+   ;; Commands with arguments:
+   "\\(if\\|elif\\|while\\|for\\|def\\|class\\|except\\|with\\|match\\|case\\)"
+   ;; Trailing space & parenthesis.
+   "\\_>"
 
-    "\\|"
-    ;; Commands without arguments:
-    "\\(else\\|try\\|finally\\)"
-    ;; Trailing space & parenthesis.
-    "\\_>"))
+   "\\|"
+   ;; Commands without arguments:
+   "\\(else\\|try\\|finally\\)"
+   ;; Trailing space & parenthesis.
+   "\\_>"))
 
 
 ;; ---------------------------------------------------------------------------
@@ -40,10 +41,8 @@
 
 (defun hl-indent-scope-preset-python--range-has-indentation (beg end)
   "Return non-nil if text at the start of BEG until END is indented at all."
-  (let
-    (
-      (search t)
-      (has-indent nil))
+  (let ((search t)
+        (has-indent nil))
     (save-excursion
       (goto-char beg)
       (beginning-of-line)
@@ -60,28 +59,28 @@
   "Expand BEG backwards as needed (when in the middle of an indentation block).
 Argument END is used to limit the search forwards."
   (cond
-    ;; Check if the text between beg/end is mid-indentation.
-    ((hl-indent-scope-preset-python--range-has-indentation beg end)
-      (save-excursion
-        ;; Extend the beginning!
-        (goto-char beg)
-        (let ((search t))
-          (while
-            (and
-              search
-              (re-search-backward hl-indent-scope-preset-python--block-commands (point-min) t))
+   ;; Check if the text between beg/end is mid-indentation.
+   ((hl-indent-scope-preset-python--range-has-indentation beg end)
+    (save-excursion
+      ;; Extend the beginning!
+      (goto-char beg)
+      (let ((search t))
+        (while (and search
+                    (re-search-backward hl-indent-scope-preset-python--block-commands
+                                        (point-min)
+                                        t))
 
-            (let ((state (syntax-ppss)))
-              ;; Skip strings & comments.
-              (unless (or (nth 3 state) (nth 4 state))
-                (let ((bol (line-beginning-position)))
-                  (when (eq (match-beginning 0) bol)
-                    (setq search nil)
-                    (setq beg bol))))))))
-      beg)
-    (t
-      ;; No indentation, the beginning can be used as-is.
-      beg)))
+          (let ((state (syntax-ppss)))
+            ;; Skip strings & comments.
+            (unless (or (nth 3 state) (nth 4 state))
+              (let ((bol (line-beginning-position)))
+                (when (eq (match-beginning 0) bol)
+                  (setq search nil)
+                  (setq beg bol))))))))
+    beg)
+   (t
+    ;; No indentation, the beginning can be used as-is.
+    beg)))
 
 
 (defun hl-indent-scope-preset-python--calc-block-end-no-args (pos)
@@ -92,27 +91,27 @@ Argument POS is the point at the very end of the command.
 See `hl-indent-scope-preset-python--calc-block-end'
 note on why there is no limit argument."
   (cond
-    ;; Fast path for the common case that will cover nearly all uses of
-    ;; else: try: etc... that is where the colon is directly after the command.
-    ((eq (char-after pos) ?:)
-      (1+ pos))
-    (t
-      ;; It's possible someone writes "else  :" better support this.
-      (save-excursion
-        (goto-char pos)
-        (let
+   ;; Fast path for the common case that will cover nearly all uses of
+   ;; else: try: etc... that is where the colon is directly after the command.
+   ((eq (char-after pos) ?:)
+    (1+ pos))
+   (t
+    ;; It's possible someone writes "else  :" better support this.
+    (save-excursion
+      (goto-char pos)
+      (let
           ( ;; Worst case, returning this position is not all that bad.
-            (pos-result nil)
-            (pos-init pos))
+           (pos-result nil)
+           (pos-init pos))
 
-          (skip-chars-forward "^:" (point-max))
-          (when (eq (char-after (point)) ?:)
-            (setq pos-result (1+ (point))))
+        (skip-chars-forward "^:" (point-max))
+        (when (eq (char-after (point)) ?:)
+          (setq pos-result (1+ (point))))
 
-          (unless pos-result
-            (goto-char pos-init)
-            (setq pos-result (line-end-position)))
-          pos-result)))))
+        (unless pos-result
+          (goto-char pos-init)
+          (setq pos-result (line-end-position)))
+        pos-result)))))
 
 (defun hl-indent-scope-preset-python--calc-block-end (pos)
   "Given \"if a == b:\" calculate the location of \":\".
@@ -125,37 +124,39 @@ out of the begin/end bounds the caller is interested in."
   (save-excursion
     (goto-char pos)
     (let
-      ( ;; Worst case, returning this position is not all that bad.
-        (pos-result nil)
-        (pos-init pos)
+        ( ;; Worst case, returning this position is not all that bad.
+         (pos-result nil)
+         (pos-init pos)
 
-        (search t))
+         (search t))
 
       (while (and search (not (zerop (skip-chars-forward "^:" (point-max)))))
         (cond
-          ((eq (char-after (point)) ?:)
-            (forward-char 1)
-            (let ((state (syntax-ppss)))
-              ;; Skip strings & comments.
-              (unless (or (nth 3 state) (nth 4 state))
-                ;; Not a comment, so assume this is the ':' that should be used.
-                (setq search nil)
-                (setq pos-result (point))
-                ;; Check if this point is within brackets.
-                (let ((bracket-beg (nth 1 state)))
-                  ;; Within brackets!
-                  (when (and bracket-beg (< pos-init bracket-beg))
-                    ;; Skip to the next bracket and keep looking.
-                    (let ((bracket-end (ignore-errors (scan-sexps bracket-beg 1))))
-                      (when bracket-end
-                        ;; We managed to find the end of the bracket,
-                        ;; move their and keep searching.
-                        (goto-char (1- bracket-end))
-                        (setq pos-result nil)
-                        (setq search t))))))))
-          (t
-            ;; Use fallback if there is no ':' that can be found.
-            (setq search nil))))
+         ((eq (char-after (point)) ?:)
+          (forward-char 1)
+          (let ((state (syntax-ppss)))
+            ;; Skip strings & comments.
+            (unless (or (nth 3 state) (nth 4 state))
+              ;; Not a comment, so assume this is the ':' that should be used.
+              (setq search nil)
+              (setq pos-result (point))
+              ;; Check if this point is within brackets.
+              (let ((bracket-beg (nth 1 state)))
+                ;; Within brackets!
+                (when (and bracket-beg (< pos-init bracket-beg))
+                  ;; Skip to the next bracket and keep looking.
+                  (let ((bracket-end
+                         (ignore-errors
+                           (scan-sexps bracket-beg 1))))
+                    (when bracket-end
+                      ;; We managed to find the end of the bracket,
+                      ;; move their and keep searching.
+                      (goto-char (1- bracket-end))
+                      (setq pos-result nil)
+                      (setq search t))))))))
+         (t
+          ;; Use fallback if there is no ':' that can be found.
+          (setq search nil))))
       ;; Fallback, in practice this should almost never be used and is most likely to be seen
       ;; when there is temporarily invalid syntax, while weak it's not all that bad.
       (unless pos-result
@@ -177,26 +178,21 @@ Commands before BEG may be included depending on expansion."
           ;; Skip strings & comments.
           ;; Also any text inside a nested block used for ternary operators and list comprehension.
           (unless (or (nth 3 state) (nth 4 state) (nth 1 state))
-            (let
-              (
-                (match-beg (match-beginning 0))
-                (bol (line-beginning-position)))
+            (let ((match-beg (match-beginning 0))
+                  (bol (line-beginning-position)))
               ;; Ensure the command is at the line beginning.
               ;; This excludes "a = b if x else y".
-              (when
-                (save-excursion
-                  (goto-char bol)
-                  (skip-chars-forward "[:blank:]" match-beg)
-                  (eq (point) match-beg))
-                (let
-                  (
-                    (cmd-end
-                      (cond
+              (when (save-excursion
+                      (goto-char bol)
+                      (skip-chars-forward "[:blank:]" match-beg)
+                      (eq (point) match-beg))
+                (let ((cmd-end
+                       (cond
                         ;; For commands that take no arguments, use the end of line position.
                         ((match-beginning 2)
-                          (hl-indent-scope-preset-python--calc-block-end-no-args (match-end 2)))
+                         (hl-indent-scope-preset-python--calc-block-end-no-args (match-end 2)))
                         (t
-                          (hl-indent-scope-preset-python--calc-block-end (match-end 1))))))
+                         (hl-indent-scope-preset-python--calc-block-end (match-end 1))))))
                   (push (cons (- match-beg bol) (cons match-beg cmd-end)) result))))))))
     result))
 
@@ -226,43 +222,39 @@ Where the string starts before LIMIT."
   (save-excursion
     ;; (unless (eq (point) (line-beginning-position))
     ;;   (error "Expected BOL"))
-    (let*
-      (
-        (bol (point))
-        (abs-limit (+ bol ident-limit)))
+    (let* ((bol (point))
+           (abs-limit (+ bol ident-limit)))
       (let ((ident-curr (skip-chars-forward "[:blank:]" abs-limit)))
         (cond
-          ((eq ident-limit ident-curr)
-            ;; At least at limit.
-            1)
-          ;; White-space.
-          ((hl-indent-scope-preset-python--is-space-at-point (point))
-            -1)
-          ;; Ignore comments.
-          ((hl-indent-scope-preset-python--is-comment-at-point (point))
-            -1)
-          ;; Ignore un-intended parts multi-line strings (that begin before `bol').
-          ((hl-indent-scope-preset-python--is-string-at-point-before (point) bol)
-            -1)
-          (t
-            nil))))))
+         ((eq ident-limit ident-curr)
+          ;; At least at limit.
+          1)
+         ;; White-space.
+         ((hl-indent-scope-preset-python--is-space-at-point (point))
+          -1)
+         ;; Ignore comments.
+         ((hl-indent-scope-preset-python--is-comment-at-point (point))
+          -1)
+         ;; Ignore un-intended parts multi-line strings (that begin before `bol').
+         ((hl-indent-scope-preset-python--is-string-at-point-before (point) bol)
+          -1)
+         (t
+          nil))))))
 
 (defun hl-indent-scope-preset-python--skip-indent-level (ident-ofs limit)
   "Move to the next line until a line with indentation less than IDENT-OFS is met.
 Limited by LIMIT.
 The `(point)' must be at the line beginning."
-  (let
-    (
-      (pos (point))
-      (changed nil))
-    (while
-      (and
-        (< (point) limit)
-        (let ((ty (hl-indent-scope-preset-python--line-indent-is-atleast-or-ignore ident-ofs)))
-          (when (eq 1 ty)
-            (setq changed t)
-            (setq pos (point)))
-          ty))
+  (let ((pos (point))
+        (changed nil))
+    (while (and (< (point) limit)
+                (let ((ty
+                       (hl-indent-scope-preset-python--line-indent-is-atleast-or-ignore
+                        ident-ofs)))
+                  (when (eq 1 ty)
+                    (setq changed t)
+                    (setq pos (point)))
+                  ty))
       (unless (zerop (forward-line 1))
         ;; Break.
         (goto-char limit)))
@@ -280,146 +272,132 @@ The `(point)' must be at the line beginning."
   "Calculate the indentation level at POINT after.
 The result must be greater than IDENT-OFS, otherwise return nil."
   (cond
-    ;; Fixed indentation level.
-    (hl-indent-scope-fixed-width
-      (+ ident-ofs tab-width))
-    ;; Calculate the next indent level based on the current line.
-    (t
-      ;; Calculate indentation,
-      ;; Do this by finding the first non-blank, non-comment line
-      ;; with an indentation that exceeds `ident-ofs'.
-      (let
-        (
-          (search t)
+   ;; Fixed indentation level.
+   (hl-indent-scope-fixed-width
+    (+ ident-ofs tab-width))
+   ;; Calculate the next indent level based on the current line.
+   (t
+    ;; Calculate indentation,
+    ;; Do this by finding the first non-blank, non-comment line
+    ;; with an indentation that exceeds `ident-ofs'.
+    (let ((search t)
           (ident-ofs-result nil))
-        (save-excursion
-          (beginning-of-line)
-          (while search
-            (cond
-              ((looking-at-p "[[:blank:]]*$")
-                (unless (zerop (forward-line 1))
-                  (setq search nil)))
-              (t
-                (let ((ident-curr (skip-chars-forward "[:blank:]" (point-max))))
-                  (cond
-                    ((hl-indent-scope-preset-python--is-comment-at-point (point))
+      (save-excursion
+        (beginning-of-line)
+        (while search
+          (cond
+           ((looking-at-p "[[:blank:]]*$")
+            (unless (zerop (forward-line 1))
+              (setq search nil)))
+           (t
+            (let ((ident-curr (skip-chars-forward "[:blank:]" (point-max))))
+              (cond
+               ((hl-indent-scope-preset-python--is-comment-at-point (point))
+                (cond
+                 ((zerop (forward-line 1))
+                  (beginning-of-line))
+                 (t
+                  (setq search nil))))
+               (t
+                ;; Non-comment, non-space character,
+                ;; terminate the loop and set the indentation level.
+                (setq ident-ofs-result
                       (cond
-                        ((zerop (forward-line 1))
-                          (beginning-of-line))
-                        (t
-                          (setq search nil))))
-                    (t
-                      ;; Non-comment, non-space character,
-                      ;; terminate the loop and set the indentation level.
-                      (setq ident-ofs-result
-                        (cond
-                          ((< ident-ofs ident-curr)
-                            ident-curr)
-                          (t
-                            ;; The indentation level is below or equal to the current.
-                            ;; In this case don't even use the indent level.
-                            nil)))
-                      (setq search nil))))))))
-        ident-ofs-result))))
+                       ((< ident-ofs ident-curr)
+                        ident-curr)
+                       (t
+                        ;; The indentation level is below or equal to the current.
+                        ;; In this case don't even use the indent level.
+                        nil)))
+                (setq search nil))))))))
+      ident-ofs-result))))
 
 (defun hl-indent-scope-preset-python--tree-fn-impl (beg end flat-keywords ident-current)
   "Return the remaining flat-keywords as well as the resulting tree.
 Range BEG END is used to limit the search.
 Argument FLAT-KEYWORDS is used to build the tree.
 Argument IDENT-CURRENT is the current indentation level being scanned."
-  (let
-    (
-      (flat-keywords-next flat-keywords)
-      (tree-siblings (list)))
+  (let ((flat-keywords-next flat-keywords)
+        (tree-siblings (list)))
     (while flat-keywords
       (pcase-let ((`(,ident-ofs . (,_cmd-beg . ,cmd-end)) (pop flat-keywords)))
         (cond
-          ((< ident-ofs ident-current)
-            ;; Break
-            (setq flat-keywords nil))
-          ((> ident-ofs ident-current)
-            (let ((last-sibling (car tree-siblings)))
-              (pcase-let
-                (
-                  (`(,flat-keywords-child . ,child-result)
-                    (hl-indent-scope-preset-python--tree-fn-impl
-                      beg
-                      end
-                      flat-keywords-next
-                      ident-ofs)))
-                ;; Consume the child tree.
-                (setq flat-keywords flat-keywords-child)
-                (setcdr last-sibling child-result)
-                (when child-result
-                  (let
-                    (
-                      (last-sibling-end (cdr (car last-sibling)))
+         ((< ident-ofs ident-current)
+          ;; Break
+          (setq flat-keywords nil))
+         ((> ident-ofs ident-current)
+          (let ((last-sibling (car tree-siblings)))
+            (pcase-let ((`(,flat-keywords-child . ,child-result)
+                         (hl-indent-scope-preset-python--tree-fn-impl
+                          beg
+                          end
+                          flat-keywords-next
+                          ident-ofs)))
+              ;; Consume the child tree.
+              (setq flat-keywords flat-keywords-child)
+              (setcdr last-sibling child-result)
+              (when child-result
+                (let ((last-sibling-end (cdr (car last-sibling)))
                       (child-end (cdr (car (car child-result)))))
 
-                    (let
-                      (
-                        (new-end (max last-sibling-end child-end))
+                  (let ((new-end (max last-sibling-end child-end))
                         ;; Limit by the beginning of the next entry or by `end'.
                         (limit
-                          (cond
-                            (flat-keywords
-                              (pcase-let
-                                (
-                                  (`(,_ident-ofs . (,next-cmd-beg . ,_next-cmd-end))
-                                    (car flat-keywords)))
-                                (min end next-cmd-beg)))
-                            (t
-                              end))))
-                      ;; Extend until de-intend!
+                         (cond
+                          (flat-keywords
+                           (pcase-let ((`(,_ident-ofs . (,next-cmd-beg . ,_next-cmd-end))
+                                        (car flat-keywords)))
+                             (min end next-cmd-beg)))
+                          (t
+                           end))))
+                    ;; Extend until de-intend!
 
-                      (goto-char child-end)
-                      (beginning-of-line)
-                      ;; No need to be on the line the child ends at, skip forward.
-                      (forward-line 1)
-                      (setq new-end
-                        (hl-indent-scope-preset-python--skip-indent-level ident-ofs limit))
+                    (goto-char child-end)
+                    (beginning-of-line)
+                    ;; No need to be on the line the child ends at, skip forward.
+                    (forward-line 1)
+                    (setq new-end
+                          (hl-indent-scope-preset-python--skip-indent-level ident-ofs limit))
 
-                      (setcdr (car last-sibling) new-end))))))
+                    (setcdr (car last-sibling) new-end))))))
 
-            ;; Step.
-            (setq flat-keywords-next flat-keywords))
-          (t
-            ;; Add sibling.
-            (goto-char cmd-end)
-            (beginning-of-line)
-            (forward-line 1)
-            (let
-              (
-                (ident-next (hl-indent-scope-preset-python--calc-indent-level ident-ofs))
+          ;; Step.
+          (setq flat-keywords-next flat-keywords))
+         (t
+          ;; Add sibling.
+          (goto-char cmd-end)
+          (beginning-of-line)
+          (forward-line 1)
+          (let ((ident-next (hl-indent-scope-preset-python--calc-indent-level ident-ofs))
                 (block-end (point))
                 (limit
-                  (cond
-                    (flat-keywords
-                      (pcase-let
-                        ((`(,_ident-ofs . (,next-cmd-beg . ,_next-cmd-end)) (car flat-keywords)))
-                        (min end next-cmd-beg)))
-                    (t
-                      end))))
-
-              ;; When nil, this is a single line statement.
-              ;;    if foo: do(bar)
-              ;;    if bar: do(baz)
-              ;; These can be skipped entirely but that extracting keyword logic,
-              ;; which assumes the last keyword has been added to the list,
-              ;; so use the end of line of the keyword instead.
-              (setq block-end
-                (cond
-                  (ident-next
-                    (hl-indent-scope-preset-python--skip-indent-level ident-next limit))
+                 (cond
+                  (flat-keywords
+                   (pcase-let ((`(,_ident-ofs . (,next-cmd-beg . ,_next-cmd-end))
+                                (car flat-keywords)))
+                     (min end next-cmd-beg)))
                   (t
+                   end))))
+
+            ;; When nil, this is a single line statement.
+            ;;    if foo: do(bar)
+            ;;    if bar: do(baz)
+            ;; These can be skipped entirely but that extracting keyword logic,
+            ;; which assumes the last keyword has been added to the list,
+            ;; so use the end of line of the keyword instead.
+            (setq block-end
+                  (cond
+                   (ident-next
+                    (hl-indent-scope-preset-python--skip-indent-level ident-next limit))
+                   (t
                     ;; Single line statement, should happend fairly rarely.
                     (save-excursion
                       (goto-char cmd-end)
                       (line-end-position)))))
-              (let ((block-beg cmd-end))
-                (push (cons (cons block-beg block-end) nil) tree-siblings)))
-            ;; Step.
-            (setq flat-keywords-next flat-keywords)))))
+            (let ((block-beg cmd-end))
+              (push (cons (cons block-beg block-end) nil) tree-siblings)))
+          ;; Step.
+          (setq flat-keywords-next flat-keywords)))))
 
     (cons flat-keywords-next tree-siblings)))
 

@@ -14,97 +14,92 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'hl-indent-scope))
+(eval-when-compile
+  (require 'hl-indent-scope))
 
 (defconst hl-indent-scope-preset-cmake--beg-end-commands
   (concat
-    "\\_<"
-    ;; Begin commands.
-    "\\(if\\|function\\|while\\|macro\\|foreach\\)"
-    ;; Trailing space & parenthesis.
-    "\\_>\s*("
+   "\\_<"
+   ;; Begin commands.
+   "\\(if\\|function\\|while\\|macro\\|foreach\\)"
+   ;; Trailing space & parenthesis.
+   "\\_>\s*("
 
-    "\\|"
-    ;; End commands.
-    "\\(endif\\|endfunction\\|endwhile\\|endmacro\\|endforeach\\)"
-    ;; Trailing space & parenthesis.
-    "\\_>\s*("))
+   "\\|"
+   ;; End commands.
+   "\\(endif\\|endfunction\\|endwhile\\|endmacro\\|endforeach\\)"
+   ;; Trailing space & parenthesis.
+   "\\_>\s*("))
 
 (defun hl-indent-scope-preset-cmake--tree-impl (beg end use-match)
   "Recursive tree extraction for CMake in range BEG END.
 Argument USE-MATCH uses an existing match instead of a new search."
-  (let
-    (
-      (span (cons nil nil))
-      (span-beg-fallback nil)
-      (children nil))
-    (while
-      (and
-        (null (cdr span))
-        (cond
-          (use-match
-            ;; Only ever use once!
-            (setq use-match nil)
-            t)
-          (t
-            (re-search-forward hl-indent-scope-preset-cmake--beg-end-commands (point-max) t))))
+  (let ((span (cons nil nil))
+        (span-beg-fallback nil)
+        (children nil))
+    (while (and (null (cdr span))
+                (cond
+                 (use-match
+                  ;; Only ever use once!
+                  (setq use-match nil)
+                  t)
+                 (t
+                  (re-search-forward hl-indent-scope-preset-cmake--beg-end-commands
+                                     (point-max)
+                                     t))))
       (let ((state (syntax-ppss)))
         ;; Skip strings & comments.
         (unless (or (nth 3 state) (nth 4 state))
-          (let*
-            (
-              (str-open (match-string 1))
-              (str-close (and (null str-open) (match-string 2))))
+          (let* ((str-open (match-string 1))
+                 (str-close (and (null str-open) (match-string 2))))
 
             (cond
-              (str-open
-                (cond
-                  ((null (car span))
-                    (setcar span (match-end 1)))
-                  (t
-                    (let ((child (hl-indent-scope-preset-cmake--tree-impl beg end t)))
-                      (when child
-                        (unless span-beg-fallback
-                          (setq span-beg-fallback (car (car child))))
-                        (unless (eq t (cdr child))
-                          (push child children)))))))
-              (str-close
-                ;; Break.
-                (setcdr span (match-beginning 2))))))))
+             (str-open
+              (cond
+               ((null (car span))
+                (setcar span (match-end 1)))
+               (t
+                (let ((child (hl-indent-scope-preset-cmake--tree-impl beg end t)))
+                  (when child
+                    (unless span-beg-fallback
+                      (setq span-beg-fallback (car (car child))))
+                    (unless (eq t (cdr child))
+                      (push child children)))))))
+             (str-close
+              ;; Break.
+              (setcdr span (match-beginning 2))))))))
     (cond
-      ((and (car span) (cdr span))
-        (cond
-          ((or (< (cdr span) beg) (< end (car span)))
-            ;; Return the span so it's possible to know the bounds,
-            ;; but this is out of range.
-            (cons span t))
-          (t
-            (cons span children))))
-      (children
-        (cons (cons span-beg-fallback (cdr (car (car children)))) children))
-      (t
-        nil))))
+     ((and (car span) (cdr span))
+      (cond
+       ((or (< (cdr span) beg) (< end (car span)))
+        ;; Return the span so it's possible to know the bounds,
+        ;; but this is out of range.
+        (cons span t))
+       (t
+        (cons span children))))
+     (children
+      (cons (cons span-beg-fallback (cdr (car (car children)))) children))
+     (t
+      nil))))
 
 (defun hl-indent-scope-preset-cmake--tree-fn (beg end)
   "Callback for `hl-indent-scope-tree-fn'.
 Return a tree in range BEG END."
-  (let
-    (
-      (tree nil)
-      ;; CMake uses case insensitive commands.
-      (case-fold-search t))
+  (let ((tree nil)
+        ;; CMake uses case insensitive commands.
+        (case-fold-search t))
     (goto-char (point-min))
     (save-match-data
       (while (< (point) end)
         ;; Stop searching once end is exceeded.
         (let ((child (hl-indent-scope-preset-cmake--tree-impl beg end nil)))
           (cond
-            ((null child)
-              ;; Exit.
-              (goto-char end))
-            ((not (eq t (cdr child)))
-              ;; Skip t (out of range).
-              (push child tree))))))
+           ((null child)
+            ;; Exit.
+            (goto-char end))
+           ((not (eq t (cdr child)))
+            ;; Skip t (out of range).
+            (push child tree))))))
     tree))
 
 

@@ -14,15 +14,14 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'hl-indent-scope))
+(eval-when-compile
+  (require 'hl-indent-scope))
 
 (defsubst hl-indent-scope-preset-c-mode--is-top-level-extern ()
   "Return t when POINT is part of an `extern' block."
-  (let*
-    (
-      (found nil)
-      (pos (1- (point)))
-      (ch (char-before pos)))
+  (let* ((found nil)
+         (pos (1- (point)))
+         (ch (char-before pos)))
 
     (while (or (eq ch ?\s) (eq ch ?\t))
       (setq pos (1- pos))
@@ -42,14 +41,14 @@
   "Callback for `hl-indent-scope-block-fn' at LEVEL.
 Return a tree in range BEG END."
   (cond
-    ((eq (char-before (point)) ?{)
-      (cond
-        ((and (zerop level) (hl-indent-scope-preset-c-mode--is-top-level-extern))
-          nil)
-        (t
-          t)))
-    (t
-      nil)))
+   ((eq (char-before (point)) ?{)
+    (cond
+     ((and (zerop level) (hl-indent-scope-preset-c-mode--is-top-level-extern))
+      nil)
+     (t
+      t)))
+   (t
+    nil)))
 
 
 ;;;###autoload

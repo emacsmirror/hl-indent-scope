@@ -14,7 +14,8 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'hl-indent-scope))
+(eval-when-compile
+  (require 'hl-indent-scope))
 
 (defun hl-indent-scope-preset-glsl--show-block-fn (_level)
   "Callback for `hl-indent-scope-block-fn' at LEVEL.
