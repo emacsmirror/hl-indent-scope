@@ -14,7 +14,8 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'hl-indent-scope))
+(eval-when-compile
+  (require 'hl-indent-scope))
 
 (defsubst hl-indent-scope-preset-c++-mode--is-top-level-extern ()
   "Return t when POINT is part of an `extern' block."

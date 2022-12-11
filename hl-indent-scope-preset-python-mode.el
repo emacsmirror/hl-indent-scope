@@ -18,7 +18,8 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'hl-indent-scope))
+(eval-when-compile
+  (require 'hl-indent-scope))
 
 (defconst hl-indent-scope-preset-python--block-commands
   (concat

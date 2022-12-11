@@ -226,7 +226,8 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
               (unless
                 (or
                   ;; Entirely outside the range, ignore.
-                  (<= all-end pos-beg) (<= pos-end all-beg)
+                  (<= all-end pos-beg)
+                  (<= pos-end all-beg)
                   ;; If the S-expression is on one line, there is no need to include it.
                   ;; At least not for the purpose of indentation highlighting.
                   (<= pos-end (line-end-position)))
@@ -420,8 +421,8 @@ This function moves the point, caller may wish to use `save-excursion'."
     (let
       (
         (tree
-          (funcall
-            (or hl-indent-scope-tree-fn 'hl-indent-scope--tree-from-buffer) all-beg all-end)))
+          (funcall (or hl-indent-scope-tree-fn 'hl-indent-scope--tree-from-buffer)
+            all-beg all-end)))
       (when tree
         ;; Go to the end of the tree's range.
         (goto-char (cdr (car (car tree))))
@@ -678,12 +679,12 @@ when checking the entire buffer for example."
       ;; So use repeat and the timer can cancel it's self.
       (unless hl-indent-scope--idle-timer
         (setq hl-indent-scope--idle-timer
-          (run-with-idle-timer
-            hl-indent-scope-idle-delay
+          (run-with-idle-timer hl-indent-scope-idle-delay
             ;; Not actually a repeat timer,
             ;; just done so we can be sure this runs until the callback disables the timer.
             ;; This ensures any interruption won't leave an incomplete state.
-            :repeat #'hl-indent-scope--idle-handle-pending-ranges-timer-callback (current-buffer)))))))
+            :repeat #'hl-indent-scope--idle-handle-pending-ranges-timer-callback
+            (current-buffer)))))))
 
 (defun hl-indent-scope--idle-enable ()
   "Enable the idle style of updating."
@@ -768,6 +769,7 @@ when checking the entire buffer for example."
 (define-minor-mode hl-indent-scope-mode
   "Highlight block under the cursor."
   :global nil
+
   (cond
     (hl-indent-scope-mode
       (hl-indent-scope--mode-enable))
@@ -775,10 +777,10 @@ when checking the entire buffer for example."
       (hl-indent-scope--mode-disable))))
 
 ;;;###autoload
-(define-globalized-minor-mode
-  global-hl-indent-scope-mode
+(define-globalized-minor-mode global-hl-indent-scope-mode
 
-  hl-indent-scope-mode hl-indent-scope--mode-turn-on)
+  hl-indent-scope-mode
+  hl-indent-scope--mode-turn-on)
 
 (provide 'hl-indent-scope)
 ;; Local Variables:
