@@ -310,4 +310,8 @@
         (should (equal code-str-expect code-str-result))))))
 
 (provide 'hl-indent-scope-test)
+;; Local Variables:
+;; fill-column: 99
+;; indent-tabs-mode: nil
+;; End:
 ;;; hl-indent-scope-test.el ends here

@@ -417,4 +417,8 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
   (setq hl-indent-scope-tree-fn 'hl-indent-scope-preset-python--tree-fn))
 
 (provide 'hl-indent-scope-preset-python-mode)
+;; Local Variables:
+;; fill-column: 99
+;; indent-tabs-mode: nil
+;; End:
 ;;; hl-indent-scope-preset-python-mode.el ends here

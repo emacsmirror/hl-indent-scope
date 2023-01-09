@@ -754,6 +754,7 @@ when checking the entire buffer for example."
 
 (provide 'hl-indent-scope)
 ;; Local Variables:
+;; fill-column: 99
 ;; indent-tabs-mode: nil
 ;; End:
 ;;; hl-indent-scope.el ends here

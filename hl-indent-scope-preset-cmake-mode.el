@@ -112,4 +112,8 @@ Return a tree in range BEG END."
   (setq hl-indent-scope-tree-fn 'hl-indent-scope-preset-cmake--tree-fn))
 
 (provide 'hl-indent-scope-preset-cmake-mode)
+;; Local Variables:
+;; fill-column: 99
+;; indent-tabs-mode: nil
+;; End:
 ;;; hl-indent-scope-preset-cmake-mode.el ends here

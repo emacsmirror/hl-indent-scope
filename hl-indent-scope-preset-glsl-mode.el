@@ -31,4 +31,8 @@ Return a tree in range BEG END."
   (setq hl-indent-scope-show-block-fn 'hl-indent-scope-preset-glsl--show-block-fn))
 
 (provide 'hl-indent-scope-preset-glsl-mode)
+;; Local Variables:
+;; fill-column: 99
+;; indent-tabs-mode: nil
+;; End:
 ;;; hl-indent-scope-preset-glsl-mode.el ends here
