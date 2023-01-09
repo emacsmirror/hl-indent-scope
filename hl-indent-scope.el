@@ -18,7 +18,7 @@
 
 ;;; Usage
 
-;; (hl-indent-scope-mode) ;; activate in the current buffer.
+;; (hl-indent-scope-mode) ; Activate in the current buffer.
 
 ;;; Code:
 
@@ -140,10 +140,8 @@ This has the same behavior as `search-forward'."
 (defun hl-indent-scope--next-sexp-by-syntax (end level)
   "Skip forward by syntax, bound by END.
 Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
-  (let
-      ( ;; When nothing is found, don't move the point.
-       (found nil)
-       (pos-init (point)))
+  (let ((found nil) ; When nothing is found, don't move the point.
+        (pos-init (point)))
     (cond
      (hl-indent-scope-show-block-fn
       ;; Search until `hl-indent-scope-show-block-fn' succeeds (empty while body).
@@ -288,10 +286,8 @@ Argument STOP is the current indentation level, use for reference."
   "It's assumed the point is at the line start.
 Argument STOPS are the list of integer large to zero.
 Argument CACHE-EMPTY-LINE-STR stores the empty string."
-  (let*
-      ( ;; It's assumed (point) is at the beginning of the line.
-       (pos-bol (point))
-       (pos-eol (line-end-position)))
+  (let* ((pos-bol (point)) ; It's assumed (point) is at the beginning of the line.
+         (pos-eol (line-end-position)))
     (cond
      ;; Empty line.
      ((eq pos-bol pos-eol)
@@ -360,12 +356,11 @@ Arguments ALL-BEG, ALL-END are the full range."
 
         ;; Recalculate current indent if this is not top-level.
         (when (and hl-indent-scope-indent-block-fn (cdr stops))
-          (let
-              ( ;; Optionally calculate a new indentation.
-               (indent-for-block
-                (save-excursion
-                  (goto-char range-beg)
-                  (funcall hl-indent-scope-indent-block-fn level))))
+          (let ((indent-for-block
+                 ;; Optionally calculate a new indentation.
+                 (save-excursion
+                   (goto-char range-beg)
+                   (funcall hl-indent-scope-indent-block-fn level))))
             ;; Check the new indentation is different.
             (unless (eq indent-for-block (car (car stops)))
               ;; Replace the first item.
@@ -570,11 +565,9 @@ when checking the entire buffer for example."
         (when (and (overlay-get item-ov 'hl-indent-scope-pending)
                    ;; It's possible these become invalid while looping over items.
                    (overlay-buffer item-ov))
-
-          (let
-              ( ;; Clamped range.
-               (pos-beg (overlay-start item-ov))
-               (pos-end (overlay-end item-ov)))
+          ;; Clamped range.
+          (let ((pos-beg (overlay-start item-ov))
+                (pos-end (overlay-end item-ov)))
 
             (when clamp-range
               (setq pos-beg (max all-beg pos-beg))

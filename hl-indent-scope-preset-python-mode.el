@@ -99,10 +99,9 @@ note on why there is no limit argument."
     ;; It's possible someone writes "else  :" better support this.
     (save-excursion
       (goto-char pos)
-      (let
-          ( ;; Worst case, returning this position is not all that bad.
-           (pos-result nil)
-           (pos-init pos))
+      ;; Worst case, returning this position is not all that bad.
+      (let ((pos-result nil)
+            (pos-init pos))
 
         (skip-chars-forward "^:" (point-max))
         (when (eq (char-after (point)) ?:)
@@ -123,12 +122,10 @@ important the proper syntactic end is returned even if this is
 out of the begin/end bounds the caller is interested in."
   (save-excursion
     (goto-char pos)
-    (let
-        ( ;; Worst case, returning this position is not all that bad.
-         (pos-result nil)
-         (pos-init pos)
+    (let ((pos-result nil) ; Worst case, returning this position is not all that bad.
+          (pos-init pos)
 
-         (search t))
+          (search t))
 
       (while (and search (not (zerop (skip-chars-forward "^:" (point-max)))))
         (cond
