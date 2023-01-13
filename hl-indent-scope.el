@@ -29,6 +29,19 @@
 ;;   (C++ can use <> for angle brackets for as well as operators for e.g.)
 ;;   Instead read the syntax table from the point e.g. `syntax-after'.
 
+
+;; ---------------------------------------------------------------------------
+;; Compatibility
+
+(when (version< emacs-version "29.1")
+  (defsubst pos-bol (&optional n)
+    "Return the position at the line beginning."
+    (line-beginning-position n))
+  (defsubst pos-eol (&optional n)
+    "Return the position at the line end."
+    (line-end-position n)))
+
+
 ;; ---------------------------------------------------------------------------
 ;; Custom Variables
 
