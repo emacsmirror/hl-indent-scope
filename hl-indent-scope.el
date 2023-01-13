@@ -375,13 +375,13 @@ Arguments ALL-BEG, ALL-END are the full range."
           ;; For zero level indentation there is nothing to do in-between members of the tree.
           (when (zerop level)
             (goto-char range-end)
-            (beginning-of-line))
+            (goto-char (pos-bol)))
 
           ;; TODO: avoid forward-line when we're jumping over values out of all{beg/end}
           (cond
            ((zerop level)
             (goto-char range-end)
-            (beginning-of-line))
+            (goto-char (pos-bol)))
            (t
             (while (<= range-end (point))
               (when (and (< (point) all-end) (<= all-beg (point)))
@@ -415,7 +415,7 @@ This function moves the point, caller may wish to use `save-excursion'."
       (when tree
         ;; Go to the end of the tree's range.
         (goto-char (cdr (car (car tree))))
-        (beginning-of-line)
+        (goto-char (pos-bol))
 
         (hl-indent-scope--font-lock-tree-impl
          all-beg

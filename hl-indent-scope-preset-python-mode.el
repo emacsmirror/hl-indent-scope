@@ -45,7 +45,7 @@
         (has-indent nil))
     (save-excursion
       (goto-char beg)
-      (beginning-of-line)
+      (goto-char (pos-bol))
       (while (and search (< (point) end))
         (unless (looking-at-p "[[:blank:]]*$")
           (when (memq (char-after (point)) (list ?\s ?\t))
@@ -280,7 +280,7 @@ The result must be greater than IDENT-OFS, otherwise return nil."
     (let ((search t)
           (ident-ofs-result nil))
       (save-excursion
-        (beginning-of-line)
+        (goto-char (pos-bol))
         (while search
           (cond
            ((looking-at-p "[[:blank:]]*$")
@@ -292,7 +292,7 @@ The result must be greater than IDENT-OFS, otherwise return nil."
                ((hl-indent-scope-preset-python--is-comment-at-point (point))
                 (cond
                  ((zerop (forward-line 1))
-                  (beginning-of-line))
+                  (goto-char (pos-bol)))
                  (t
                   (setq search nil))))
                (t
@@ -350,7 +350,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
                     ;; Extend until de-intend!
 
                     (goto-char child-end)
-                    (beginning-of-line)
+                    (goto-char (pos-bol))
                     ;; No need to be on the line the child ends at, skip forward.
                     (forward-line 1)
                     (setq new-end
@@ -363,7 +363,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
          (t
           ;; Add sibling.
           (goto-char cmd-end)
-          (beginning-of-line)
+          (goto-char (pos-bol))
           (forward-line 1)
           (let ((ident-next (hl-indent-scope-preset-python--calc-indent-level ident-ofs))
                 (block-end (point))
