@@ -648,12 +648,12 @@ when checking the entire buffer for example."
     ;; `hl-indent-scope--idle-handle-pending-ranges-timer-callback' is canceled for e.g.
     ;; So use repeat and the timer can cancel it's self.
     (unless hl-indent-scope--idle-timer
+      ;; Note that this is not actually a `:repeat' timer,
+      ;; just done so we can be sure this runs until the callback disables the timer.
+      ;; This ensures any interruption won't leave an incomplete state.
       (setq hl-indent-scope--idle-timer
             (run-with-idle-timer
              hl-indent-scope-idle-delay
-             ;; Not actually a repeat timer,
-             ;; just done so we can be sure this runs until the callback disables the timer.
-             ;; This ensures any interruption won't leave an incomplete state.
              :repeat
              #'hl-indent-scope--idle-handle-pending-ranges-timer-callback
              (current-buffer)))))))
