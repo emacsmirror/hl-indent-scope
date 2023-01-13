@@ -116,9 +116,9 @@ from last to first.")
     `(save-excursion
        ;; Extend the ranges to line start/end.
        (goto-char ,pos-end)
-       (setq ,pos-end (line-end-position))
+       (setq ,pos-end (pos-eol))
        (goto-char ,pos-beg)
-       (setq ,pos-beg (line-beginning-position)))))
+       (setq ,pos-beg (pos-bol)))))
 
 
 ;; ---------------------------------------------------------------------------
@@ -229,7 +229,7 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
                        (<= pos-end all-beg)
                        ;; If the S-expression is on one line, there is no need to include it.
                        ;; At least not for the purpose of indentation highlighting.
-                       (<= pos-end (line-end-position)))
+                       (<= pos-end (pos-eol)))
                 (push (cons
                        (cons pos-beg pos-end)
                        (hl-indent-scope--tree-from-buffer-impl
@@ -269,10 +269,10 @@ Argument STOP is the current indentation level, use for reference."
       (save-excursion
         (let ((pos-next nil))
           (goto-char range-beg)
-          (setq pos-next (1+ (line-end-position)))
+          (setq pos-next (1+ (pos-eol)))
           (while (and (null found) (< pos-next range-end))
             (goto-char pos-next)
-            (let ((eol (line-end-position)))
+            (let ((eol (pos-eol)))
               (let ((skip (skip-syntax-forward " " eol)))
                 (cond
                  ((< stop skip)
@@ -287,7 +287,7 @@ Argument STOP is the current indentation level, use for reference."
 Argument STOPS are the list of integer large to zero.
 Argument CACHE-EMPTY-LINE-STR stores the empty string."
   (let* ((pos-bol (point)) ; It's assumed (point) is at the beginning of the line.
-         (pos-eol (line-end-position)))
+         (pos-eol (pos-eol)))
     (cond
      ;; Empty line.
      ((eq pos-bol pos-eol)
@@ -699,7 +699,7 @@ when checking the entire buffer for example."
       (setq hl-indent-scope-show-block-fn (lambda (_level) (eq (char-before (point)) ?\()))
       ;; Needed so each S-expression can have different indentation.
       (setq hl-indent-scope-indent-block-fn
-            (lambda (_level) (max 0 (1- (- (point) (line-beginning-position)))))))))
+            (lambda (_level) (max 0 (1- (- (point) (pos-bol)))))))))
 
   (cond
    ((<= hl-indent-scope-idle-delay 0.0)

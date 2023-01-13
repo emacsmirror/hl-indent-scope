@@ -73,7 +73,7 @@ Argument END is used to limit the search forwards."
           (let ((state (syntax-ppss)))
             ;; Skip strings & comments.
             (unless (or (nth 3 state) (nth 4 state))
-              (let ((bol (line-beginning-position)))
+              (let ((bol (pos-bol)))
                 (when (eq (match-beginning 0) bol)
                   (setq search nil)
                   (setq beg bol))))))))
@@ -109,7 +109,7 @@ note on why there is no limit argument."
 
         (unless pos-result
           (goto-char pos-init)
-          (setq pos-result (line-end-position)))
+          (setq pos-result (pos-eol)))
         pos-result)))))
 
 (defun hl-indent-scope-preset-python--calc-block-end (pos)
@@ -158,7 +158,7 @@ out of the begin/end bounds the caller is interested in."
       ;; when there is temporarily invalid syntax, while weak it's not all that bad.
       (unless pos-result
         (goto-char pos-init)
-        (setq pos-result (line-end-position)))
+        (setq pos-result (pos-eol)))
       pos-result)))
 
 (defun hl-indent-scope-preset-python--flat-block-list (beg end)
@@ -176,7 +176,7 @@ Commands before BEG may be included depending on expansion."
           ;; Also any text inside a nested block used for ternary operators and list comprehension.
           (unless (or (nth 3 state) (nth 4 state) (nth 1 state))
             (let ((match-beg (match-beginning 0))
-                  (bol (line-beginning-position)))
+                  (bol (pos-bol)))
               ;; Ensure the command is at the line beginning.
               ;; This excludes "a = b if x else y".
               (when (save-excursion
@@ -217,7 +217,7 @@ Where the string starts before LIMIT."
 (defsubst hl-indent-scope-preset-python--line-indent-is-atleast-or-ignore (ident-limit)
   "Non-nil when line beginning position indentation level is at least IDENT-LIMIT."
   (save-excursion
-    ;; (unless (eq (point) (line-beginning-position))
+    ;; (unless (eq (point) (pos-bol))
     ;;   (error "Expected BOL"))
     (let* ((bol (point))
            (abs-limit (+ bol ident-limit)))
@@ -263,7 +263,7 @@ The `(point)' must be at the line beginning."
       (while (looking-at-p "[[:blank:]]*$")
         (forward-line -1)))
 
-    (line-end-position)))
+    (pos-eol)))
 
 (defun hl-indent-scope-preset-python--calc-indent-level (ident-ofs)
   "Calculate the indentation level at POINT after.
@@ -390,7 +390,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
                     ;; Single line statement, should happend fairly rarely.
                     (save-excursion
                       (goto-char cmd-end)
-                      (line-end-position)))))
+                      (pos-eol)))))
             (let ((block-beg cmd-end))
               (push (cons (cons block-beg block-end) nil) tree-siblings)))
           ;; Step.

@@ -31,7 +31,7 @@
       ;; We have found `" {` which is likely to be an `extern',
       ;; Allow for slower logic here as it's likely to run _mush_ less often,
       ;; than regular (function/conditionals ... etc).
-      (let ((str (buffer-substring-no-properties (line-beginning-position) pos)))
+      (let ((str (buffer-substring-no-properties (pos-bol) pos)))
         (when (string-match-p "\s*extern\s+\"[[:alpha:]]+\"" str)
           (setq found t))))
 
