@@ -326,10 +326,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
           (let ((last-sibling (car tree-siblings)))
             (pcase-let ((`(,flat-keywords-child . ,child-result)
                          (hl-indent-scope-preset-python--tree-fn-impl
-                          beg
-                          end
-                          flat-keywords-next
-                          ident-ofs)))
+                          beg end flat-keywords-next ident-ofs)))
               ;; Consume the child tree.
               (setq flat-keywords flat-keywords-child)
               (setcdr last-sibling child-result)

@@ -250,11 +250,7 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
                 (push (cons
                        (cons pos-beg pos-end)
                        (hl-indent-scope--tree-from-buffer-impl
-                        all-beg
-                        all-end
-                        pos-beg
-                        pos-end
-                        (1+ level)))
+                        all-beg all-end pos-beg pos-end (1+ level)))
                       tree))
               (goto-char pos-end))))))
     tree))
@@ -407,12 +403,7 @@ Arguments ALL-BEG, ALL-END are the full range."
 
           (when children
             (hl-indent-scope--font-lock-tree-impl
-             all-beg
-             all-end
-             children
-             level-next
-             stops-next
-             cache-empty-line-str-next))
+             all-beg all-end children level-next stops-next cache-empty-line-str-next))
 
           (while (<= range-beg (point))
             (when (and (< (point) all-end) (<= all-beg (point)))
@@ -461,9 +452,7 @@ This function moves the point, caller may wish to use `save-excursion'."
     (cond
      ((< factor 0)
       (vector
-       (max 0 (+ (aref a 0) factor))
-       (max 0 (+ (aref a 1) factor))
-       (max 0 (+ (aref a 2) factor))))
+       (max 0 (+ (aref a 0) factor)) (max 0 (+ (aref a 1) factor)) (max 0 (+ (aref a 2) factor))))
      (t
       (vector
        (min 65535 (+ (aref a 0) factor))
@@ -642,9 +631,7 @@ when checking the entire buffer for example."
    ((and hl-indent-scope--idle-overlay-last
          (eq pos-end (overlay-start hl-indent-scope--idle-overlay-last)))
     (move-overlay
-     hl-indent-scope--idle-overlay-last
-     pos-beg
-     (overlay-end hl-indent-scope--idle-overlay-last)))
+     hl-indent-scope--idle-overlay-last pos-beg (overlay-end hl-indent-scope--idle-overlay-last)))
    (t
     (let ((item-ov (make-overlay pos-beg pos-end)))
       ;; Handy for debugging pending regions to be checked.
