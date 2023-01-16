@@ -656,11 +656,10 @@ when checking the entire buffer for example."
       ;; just done so we can be sure this runs until the callback disables the timer.
       ;; This ensures any interruption won't leave an incomplete state.
       (setq hl-indent-scope--idle-timer
-            (run-with-idle-timer
-             hl-indent-scope-idle-delay
-             :repeat
-             #'hl-indent-scope--idle-handle-pending-ranges-timer-callback
-             (current-buffer)))))))
+            (run-with-idle-timer hl-indent-scope-idle-delay
+                                 :repeat
+                                 #'hl-indent-scope--idle-handle-pending-ranges-timer-callback
+                                 (current-buffer)))))))
 
 (defun hl-indent-scope--idle-enable ()
   "Enable the idle style of updating."
