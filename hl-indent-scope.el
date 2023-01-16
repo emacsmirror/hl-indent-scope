@@ -447,7 +447,7 @@ This function moves the point, caller may wish to use `save-excursion'."
 ;; This logic is used when the face color isn't set.
 
 (defun hl-indent-scope--color-tint (a percent)
-  "Tint color A by PERCENT in renga [-100..100]."
+  "Tint color A by PERCENT in range [-100..100]."
   (let ((factor (truncate (* 655.35 percent))))
     (cond
      ((< factor 0)
