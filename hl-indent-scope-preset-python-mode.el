@@ -55,12 +55,13 @@
           (setq search nil))))
     has-indent))
 
-(defun hl-indent-scope-preset-python--expand-back (beg end)
+(defun hl-indent-scope-preset-python--expand-back (beg end &optional has-indent)
   "Expand BEG backwards as needed (when in the middle of an indentation block).
 Argument END is used to limit the search forwards."
-  (cond
-   ;; Check if the text between beg/end is mid-indentation.
-   ((hl-indent-scope-preset-python--range-has-indentation beg end)
+  ;; Check if the text between beg/end is mid-indentation.
+  ;; Otherwise there is no indentation and this line can be left as-is.
+  (when (or has-indent (hl-indent-scope-preset-python--range-has-indentation beg end))
+    (setq has-indent t)
     (save-excursion
       ;; Extend the beginning!
       (goto-char beg)
@@ -76,11 +77,25 @@ Argument END is used to limit the search forwards."
               (let ((bol (pos-bol)))
                 (when (eq (match-beginning 0) bol)
                   (setq search nil)
-                  (setq beg bol))))))))
-    beg)
-   (t
-    ;; No indentation, the beginning can be used as-is.
-    beg)))
+                  (setq beg bol)))))))))
+
+  ;; Workaround for lines that have no indentation but are part of multi-line expressions.
+  ;; e.g.
+  ;;    def function(
+  ;;        a, b, c,
+  ;;    ): # <- this line.
+  ;;        pass
+  ;; In this case "this line" should not be used as a beginning, skip over the bracket.
+  (let ((bracket-beg
+         (ignore-errors
+           (nth 1 (syntax-ppss beg)))))
+    (when bracket-beg
+      (save-excursion
+        (goto-char bracket-beg)
+        (setq bracket-beg (pos-bol)))
+      (setq beg (hl-indent-scope-preset-python--expand-back bracket-beg beg has-indent))))
+
+  beg)
 
 
 (defun hl-indent-scope-preset-python--calc-block-end-no-args (pos)
