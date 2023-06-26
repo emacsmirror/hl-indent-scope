@@ -200,18 +200,14 @@ Commands before BEG may be included depending on expansion."
                   (bol (pos-bol)))
               ;; Ensure the command is at the line beginning.
               ;; This excludes "a = b if x else y".
-              (when (save-excursion
-                      (goto-char bol)
-                      (skip-chars-forward "[:blank:]" match-beg)
-                      (eq (point) match-beg))
-                (let ((cmd-end
-                       (cond
-                        ;; For commands that take no arguments, use the end of line position.
-                        ((match-beginning 3)
-                         (hl-indent-scope-preset-python--calc-block-end-no-args (match-end 3)))
-                        (t
-                         (hl-indent-scope-preset-python--calc-block-end (match-end 2))))))
-                  (push (cons (- match-beg bol) (cons match-beg cmd-end)) result))))))))
+              (let ((cmd-end
+                     (cond
+                      ;; For commands that take no arguments, use the end of line position.
+                      ((match-beginning 3)
+                       (hl-indent-scope-preset-python--calc-block-end-no-args (match-end 3)))
+                      (t
+                       (hl-indent-scope-preset-python--calc-block-end (match-end 2))))))
+                (push (cons (- match-beg bol) (cons match-beg cmd-end)) result)))))))
     result))
 
 (defsubst hl-indent-scope-preset-python--is-comment-at-point (pos)
