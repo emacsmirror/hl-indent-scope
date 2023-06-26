@@ -5,6 +5,7 @@ Change Log
 
 - In development.
 
+  - Properly highlight ``async def`` for Python.
   - Don't calculate indentation for multi-line strings in Python.
   - Fix error highlighting indentation when un-indented blocks were found (where indentation levels were not in-order).
 

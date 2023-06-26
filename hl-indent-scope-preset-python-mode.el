@@ -23,16 +23,22 @@
 
 (defconst hl-indent-scope-preset-python--block-commands
   (concat
-   "\\_<"
-   ;; Commands with arguments:
-   "\\(if\\|elif\\|while\\|for\\|def\\|class\\|except\\|with\\|match\\|case\\)"
+   ;; Blank line start.
+   "^[[:blank:]]*"
+   ;; Any match (group 1).
+   "\\("
+   ;; Commands with arguments (group 2):
+   "\\(if\\|elif\\|while\\|for\\|def\\|class\\|except\\|with\\|match\\|case\\|"
+   ;; Special case.
+   "async[[:blank:]]+def\\)"
    ;; Trailing space & parenthesis.
-   "\\_>"
 
    "\\|"
-   ;; Commands without arguments:
+   ;; Commands without arguments (group 3):
    "\\(else\\|try\\|finally\\)"
    ;; Trailing space & parenthesis.
+   "\\)"
+   ;; End term.
    "\\_>"))
 
 
@@ -75,7 +81,7 @@ Argument END is used to limit the search forwards."
             ;; Skip strings & comments.
             (unless (or (nth 3 state) (nth 4 state))
               (let ((bol (pos-bol)))
-                (when (eq (match-beginning 0) bol)
+                (when (eq (match-beginning 1) bol)
                   (setq search nil)
                   (setq beg bol)))))))))
 
@@ -190,7 +196,7 @@ Commands before BEG may be included depending on expansion."
           ;; Skip strings & comments.
           ;; Also any text inside a nested block used for ternary operators and list comprehension.
           (unless (or (nth 3 state) (nth 4 state) (nth 1 state))
-            (let ((match-beg (match-beginning 0))
+            (let ((match-beg (match-beginning 1))
                   (bol (pos-bol)))
               ;; Ensure the command is at the line beginning.
               ;; This excludes "a = b if x else y".
@@ -201,10 +207,10 @@ Commands before BEG may be included depending on expansion."
                 (let ((cmd-end
                        (cond
                         ;; For commands that take no arguments, use the end of line position.
-                        ((match-beginning 2)
-                         (hl-indent-scope-preset-python--calc-block-end-no-args (match-end 2)))
+                        ((match-beginning 3)
+                         (hl-indent-scope-preset-python--calc-block-end-no-args (match-end 3)))
                         (t
-                         (hl-indent-scope-preset-python--calc-block-end (match-end 1))))))
+                         (hl-indent-scope-preset-python--calc-block-end (match-end 2))))))
                   (push (cons (- match-beg bol) (cons match-beg cmd-end)) result))))))))
     result))
 
