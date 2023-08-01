@@ -520,7 +520,20 @@ see it's documentation for available keywords."
           (setq args (cdr args))))))
 
     (unless mode-value
-      (setq mode-value (symbol-name major-mode)))
+      (setq mode-value (symbol-name major-mode))
+
+      ;; Map tree-sitter presets, as there is no reason to have separate
+      ;; tree-sitter modes currently.
+      (cond
+       ((string-equal mode-value "python-ts-mode")
+        (setq mode-value "python-mode"))
+       ((string-equal mode-value "c-ts-mode")
+        (setq mode-value "c-mode"))
+       ((string-equal mode-value "c++-ts-mode")
+        (setq mode-value "c++-mode"))
+       ((string-equal mode-value "cmake-ts-mode")
+        (setq mode-value "cmake-mode"))))
+
     (let ((preset-sym (intern (concat "hl-indent-scope-preset-" mode-value))))
       (when (condition-case err
                 (progn
