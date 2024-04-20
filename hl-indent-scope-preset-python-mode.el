@@ -7,7 +7,7 @@
 
 ;; URL: https://codeberg.org/ideasman42/emacs-hl-indent-scope-preset
 ;; Version: 0.1
-;; Package-Requires: ((emacs "26.2"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;;; Commentary:
 ;; Preset for Python mode.

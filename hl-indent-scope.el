@@ -7,7 +7,7 @@
 
 ;; URL: https://codeberg.org/ideasman42/emacs-hl-indent-scope
 ;; Version: 0.1
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;;; Commentary:
 
@@ -28,22 +28,6 @@
 ;;   as the same character may represent different brackets.
 ;;   (C++ can use <> for angle brackets for as well as operators for e.g.)
 ;;   Instead read the syntax table from the point e.g. `syntax-after'.
-
-
-;; ---------------------------------------------------------------------------
-;; Compatibility
-
-(when (and (version< emacs-version "29.1") (not (and (fboundp 'pos-bol) (fboundp 'pos-eol))))
-  (defun pos-bol (&optional n)
-    "Return the position at the line beginning."
-    (declare (side-effect-free t))
-    (let ((inhibit-field-text-motion t))
-      (line-beginning-position n)))
-  (defun pos-eol (&optional n)
-    "Return the position at the line end."
-    (declare (side-effect-free t))
-    (let ((inhibit-field-text-motion t))
-      (line-end-position n))))
 
 
 ;; ---------------------------------------------------------------------------
