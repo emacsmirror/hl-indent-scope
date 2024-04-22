@@ -47,6 +47,7 @@
 
 (defun hl-indent-scope-preset-python--range-has-indentation (beg end)
   "Return non-nil if text at the start of BEG until END is indented at all."
+  (declare (important-return-value t))
   (let ((search t)
         (has-indent nil))
     (save-excursion
@@ -64,6 +65,7 @@
 (defun hl-indent-scope-preset-python--expand-back (beg end &optional has-indent)
   "Expand BEG backwards as needed (when in the middle of an indentation block).
 Argument END is used to limit the search forwards."
+  (declare (important-return-value t))
   ;; Check if the text between beg/end is mid-indentation.
   ;; Otherwise there is no indentation and this line can be left as-is.
   (when (or has-indent (hl-indent-scope-preset-python--range-has-indentation beg end))
@@ -111,6 +113,7 @@ Argument POS is the point at the very end of the command.
 
 See `hl-indent-scope-preset-python--calc-block-end'
 note on why there is no limit argument."
+  (declare (important-return-value t))
   (cond
    ;; Fast path for the common case that will cover nearly all uses of
    ;; else: try: etc... that is where the colon is directly after the command.
@@ -141,6 +144,7 @@ Argument POS is the point at the very end of the command.
 Note that there is no limit on this bounds for this function as it's
 important the proper syntactic end is returned even if this is
 out of the begin/end bounds the caller is interested in."
+  (declare (important-return-value t))
   (save-excursion
     (goto-char pos)
     (let ((pos-result nil) ; Worst case, returning this position is not all that bad.
@@ -185,6 +189,7 @@ out of the begin/end bounds the caller is interested in."
 (defun hl-indent-scope-preset-python--flat-block-list (beg end)
   "Return all commands between BEG & END.
 Commands before BEG may be included depending on expansion."
+  (declare (important-return-value t))
   (let ((result (list)))
     (save-excursion
       ;; Expand beginning as needed.
@@ -259,6 +264,7 @@ Where the string starts before LIMIT."
   "Move to the next line until a line with indentation less than IDENT-OFS is met.
 Limited by LIMIT.
 The `(point)' must be at the line beginning."
+  (declare (important-return-value t))
   (let ((pos (point))
         (changed nil))
     (while (and (< (point) limit)
@@ -285,6 +291,7 @@ The `(point)' must be at the line beginning."
 (defun hl-indent-scope-preset-python--calc-indent-level (ident-ofs)
   "Calculate the indentation level at POINT after.
 The result must be greater than IDENT-OFS, otherwise return nil."
+  (declare (important-return-value t))
   (cond
    ;; Fixed indentation level.
    (hl-indent-scope-fixed-width
@@ -331,6 +338,7 @@ The result must be greater than IDENT-OFS, otherwise return nil."
 Range BEG END is used to limit the search.
 Argument FLAT-KEYWORDS is used to build the tree.
 Argument IDENT-CURRENT is the current indentation level being scanned."
+  (declare (important-return-value t))
   (let ((flat-keywords-next flat-keywords)
         (tree-siblings (list)))
     (while flat-keywords
@@ -414,7 +422,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
 
 (defun hl-indent-scope-preset-python--tree-fn (beg end)
   "Return tree between BEG & END."
-  ;;
+  (declare (important-return-value t))
   (let ((flat-keywords (hl-indent-scope-preset-python--flat-block-list beg end)))
     (let ((tree (cdr (hl-indent-scope-preset-python--tree-fn-impl beg end flat-keywords 0))))
       tree)))
@@ -426,6 +434,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
 ;;;###autoload
 (defun hl-indent-scope-preset-python-mode (&rest args)
   "Presets for `python-mode' with optional ARGS keyword arguments."
+  (declare (important-return-value nil))
   (when args
     (message "Currently ARGS isn't used!"))
   (setq hl-indent-scope-tree-fn 'hl-indent-scope-preset-python--tree-fn))

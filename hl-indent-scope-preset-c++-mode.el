@@ -19,6 +19,7 @@
 
 (defsubst hl-indent-scope-preset-c++-mode--is-top-level-extern ()
   "Return t when POINT is part of an `extern' block."
+  (declare (important-return-value t))
   (let* ((found nil)
          (pos (1- (point)))
          (ch (char-before pos)))
@@ -39,6 +40,7 @@
 
 (defsubst hl-indent-scope-preset-c++-mode--is-top-level-namespace ()
   "Return t when POINT is part of a `namespace' block."
+  (declare (important-return-value t))
   (let* ((found nil)
          (pos (1- (point)))
          (ch (char-before pos)))
@@ -62,6 +64,7 @@
 (defun hl-indent-scope-preset-c++--show-block-fn (level)
   "Callback for `hl-indent-scope-block-fn' at LEVEL.
 Return a tree in range BEG END."
+  (declare (important-return-value t))
   (cond
    ((eq (char-before (point)) ?{)
     (cond
@@ -78,6 +81,7 @@ Return a tree in range BEG END."
 ;;;###autoload
 (defun hl-indent-scope-preset-c++-mode (&rest args)
   "Presets for `c-mode' with optional ARGS keyword arguments."
+  (declare (important-return-value nil))
   (when args
     (message "Currently ARGS isn't used!"))
   (setq hl-indent-scope-show-block-fn 'hl-indent-scope-preset-c++--show-block-fn))

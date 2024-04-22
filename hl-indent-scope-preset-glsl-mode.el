@@ -20,12 +20,14 @@
 (defun hl-indent-scope-preset-glsl--show-block-fn (_level)
   "Callback for `hl-indent-scope-block-fn' at LEVEL.
 Return a tree in range BEG END."
+  (declare (important-return-value t))
   (eq (char-before (point)) ?{))
 
 
 ;;;###autoload
 (defun hl-indent-scope-preset-glsl-mode (&rest args)
   "Presets for `c-mode' with optional ARGS keyword arguments."
+  (declare (important-return-value nil))
   (when args
     (message "Currently ARGS isn't used!"))
   (setq hl-indent-scope-show-block-fn 'hl-indent-scope-preset-glsl--show-block-fn))

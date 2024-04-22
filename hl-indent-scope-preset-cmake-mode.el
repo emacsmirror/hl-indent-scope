@@ -34,6 +34,7 @@
 (defun hl-indent-scope-preset-cmake--tree-impl (beg end use-match)
   "Recursive tree extraction for CMake in range BEG END.
 Argument USE-MATCH uses an existing match instead of a new search."
+  (declare (important-return-value t))
   (let ((span (cons nil nil))
         (span-beg-fallback nil)
         (children nil))
@@ -85,6 +86,7 @@ Argument USE-MATCH uses an existing match instead of a new search."
 (defun hl-indent-scope-preset-cmake--tree-fn (beg end)
   "Callback for `hl-indent-scope-tree-fn'.
 Return a tree in range BEG END."
+  (declare (important-return-value t))
   (let ((tree nil)
         ;; CMake uses case insensitive commands.
         (case-fold-search t))
@@ -106,6 +108,7 @@ Return a tree in range BEG END."
 ;;;###autoload
 (defun hl-indent-scope-preset-cmake-mode (&rest args)
   "Presets for `cmake-mode' with optional ARGS keyword arguments."
+  (declare (important-return-value nil))
   (when args
     (message "Currently ARGS isn't used!"))
   (setq hl-indent-scope-fixed-width t)
