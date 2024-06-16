@@ -265,11 +265,7 @@
       (insert "if True:\n" "\n" "# This is a comment." "\n" "@@@@print('This is true')\n")
 
       (insert
-       "if True:\n"
-       "\n"
-       "@@@@# This is an indented comment.\n"
-       "\n"
-       "@@@@print('This is true')\n")
+       "if True:\n" "\n" "@@@@# This is an indented comment.\n" "\n" "@@@@print('This is true')\n")
 
       (insert
        "if True:\n"
