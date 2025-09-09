@@ -331,7 +331,7 @@ Argument CACHE-EMPTY-LINE-STR stores the empty string."
           (let ((pos-end (+ (car (pop stops)) pos-bol)))
             (while stops
               (pcase-let ((`(,pos-beg . ,face) (pop stops)))
-                (setq pos-beg (+ pos-beg pos-bol))
+                (incf pos-beg pos-bol)
                 (when (< pos-beg pos-whitespace)
                   (setq pos-end (min pos-whitespace pos-end))
                   ;; Unlikely but badly indented files can have stops that go backwards.
