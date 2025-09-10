@@ -25,7 +25,7 @@
          (ch (char-before pos)))
 
     (while (or (eq ch ?\s) (eq ch ?\t))
-      (setq pos (1- pos))
+      (decf pos)
       (setq ch (char-before pos)))
 
     (when (eq ch ?\")

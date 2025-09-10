@@ -515,7 +515,7 @@ see it's documentation for available keywords."
             (0 (setq mode-value arg))
             (1 (setq quiet arg))
             (_ (error "Only two positional arguments must be given")))
-          (setq args-count (1+ args-count))
+          (incf args-count)
           (setq args (cdr args))))))
 
     (unless mode-value
