@@ -283,8 +283,10 @@ The `(point)' must be at the line beginning."
 
     ;; Ensure the line is not on white-space.
     (unless changed
-      (while (looking-at-p "[[:blank:]]*$")
-        (forward-line -1)))
+      (while (and (looking-at-p "[[:blank:]]*$")
+                  ;; Ensure one line is stepped over
+                  ;; in the unlikely event this reaches the buffer beginning.
+                  (zerop (forward-line -1)))))
 
     (pos-eol)))
 
