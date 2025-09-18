@@ -108,7 +108,7 @@ Argument END is used to limit the search forwards."
 
 (defun hl-indent-scope-preset-python--calc-block-end-no-args (pos)
   "Given \"else:\" calculate the location of \":\".
-This is quite straightforward is it's typically directly after the keyword.
+This is straightforward; it's typically directly after the keyword.
 Argument POS is the point at the very end of the command.
 
 See `hl-indent-scope-preset-python--calc-block-end'
@@ -411,7 +411,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
                    (ident-next
                     (hl-indent-scope-preset-python--skip-indent-level ident-next limit))
                    (t
-                    ;; Single line statement, should happend fairly rarely.
+                    ;; Single line statement, should happen fairly rarely.
                     (save-excursion
                       (goto-char cmd-end)
                       (pos-eol)))))
