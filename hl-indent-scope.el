@@ -85,9 +85,11 @@ Otherwise you must configure `hl-indent-scope-show-block-fn' yourself."
 
 ;; Automatically initialized unless already defined.
 (defface hl-indent-scope-odd-face (list (list t))
-  "Face used for odd columns.")
+  "Face used for odd columns."
+  :group 'hl-indent-scope)
 (defface hl-indent-scope-even-face (list (list t))
-  "Face used for even columns.")
+  "Face used for even columns."
+  :group 'hl-indent-scope)
 
 
 ;; ---------------------------------------------------------------------------
