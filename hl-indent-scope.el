@@ -768,7 +768,7 @@ when checking the entire buffer for example."
 (defun hl-indent-scope--mode-turn-on ()
   "Enable command `hl-indent-scope-mode'."
   (declare (important-return-value nil))
-  (when (and (null (minibufferp)) (null (bound-and-true-p hl-indent-scope-mode)))
+  (when (and (null (minibufferp)) (not (bound-and-true-p hl-indent-scope-mode)))
     (hl-indent-scope-mode 1)))
 
 

@@ -152,7 +152,7 @@ out of the begin/end bounds the caller is interested in."
 
           (search t))
 
-      (while (and search (not (zerop (skip-chars-forward "^:" (point-max)))))
+      (while (and search (null (zerop (skip-chars-forward "^:" (point-max)))))
         (cond
          ((eq (char-after (point)) ?:)
           (forward-char 1)

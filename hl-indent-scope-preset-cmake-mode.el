@@ -99,7 +99,7 @@ Return a tree in range BEG END."
            ((null child)
             ;; Exit.
             (goto-char end))
-           ((not (eq t (cdr child)))
+           ((null (eq t (cdr child)))
             ;; Skip t (out of range).
             (push child tree))))))
     tree))
