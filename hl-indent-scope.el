@@ -169,7 +169,7 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
       ;; Search until `hl-indent-scope-show-block-fn' succeeds (empty while body).
       (while (and (hl-indent-scope--search-forward-open-sexp end)
                   ;; Keep searching while not found.
-                  (not
+                  (null
                    (when (funcall hl-indent-scope-show-block-fn level)
                      (setq found t)
                      t)))))
@@ -654,7 +654,7 @@ when checking the entire buffer for example."
   "Track the range to spell check, adding POS-BEG & POS-END to the queue."
   (declare (important-return-value nil))
   (when (and hl-indent-scope--idle-overlay-last
-             (not (overlay-buffer hl-indent-scope--idle-overlay-last)))
+             (null (overlay-buffer hl-indent-scope--idle-overlay-last)))
     (setq hl-indent-scope--idle-overlay-last nil))
 
   (cond
@@ -768,7 +768,7 @@ when checking the entire buffer for example."
 (defun hl-indent-scope--mode-turn-on ()
   "Enable command `hl-indent-scope-mode'."
   (declare (important-return-value nil))
-  (when (and (not (minibufferp)) (not (bound-and-true-p hl-indent-scope-mode)))
+  (when (and (null (minibufferp)) (null (bound-and-true-p hl-indent-scope-mode)))
     (hl-indent-scope-mode 1)))
 
 
