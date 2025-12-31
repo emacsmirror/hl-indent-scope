@@ -756,6 +756,8 @@ checking the entire buffer."
   (remove-overlays (point-min) (point-max) 'hl-indent-scope t)
 
   (kill-local-variable 'hl-indent-scope-show-block-fn)
+  (kill-local-variable 'hl-indent-scope-indent-block-fn)
+  (kill-local-variable 'hl-indent-scope-tree-fn)
 
   (cond
    ((<= hl-indent-scope-idle-delay 0.0)
