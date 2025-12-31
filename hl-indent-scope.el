@@ -646,13 +646,26 @@ checking the entire buffer."
 (defun hl-indent-scope--idle-handle-pending-ranges-timer-callback (buf)
   "Callback that runs the repeat timer for buffer BUF."
   (declare (important-return-value nil))
-  (when (buffer-live-p buf)
+  (cond
+   ((buffer-live-p buf)
     (with-current-buffer buf
       (when (bound-and-true-p hl-indent-scope-mode)
         (hl-indent-scope--idle-handle-pending-ranges-impl)
         (when hl-indent-scope--idle-timer
           (cancel-timer hl-indent-scope--idle-timer)))
-      (kill-local-variable 'hl-indent-scope--idle-timer))))
+      (kill-local-variable 'hl-indent-scope--idle-timer)))
+   (t
+    ;; Buffer was killed, find and cancel this timer.
+    (let ((timers timer-idle-list))
+      (while timers
+        (let ((timer (pop timers)))
+          (when (and (eq
+                      (timer--function timer)
+                      #'hl-indent-scope--idle-handle-pending-ranges-timer-callback)
+                     (eq (car (timer--args timer)) buf))
+            (cancel-timer timer)
+            ;; Break.
+            (setq timers nil))))))))
 
 (defun hl-indent-scope--idle-font-lock-region-pending (pos-beg pos-end)
   "Track the range to highlight, adding POS-BEG and POS-END to the queue."
