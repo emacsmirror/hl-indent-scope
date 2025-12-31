@@ -86,10 +86,10 @@ Otherwise you must configure `hl-indent-scope-show-block-fn' yourself."
 ;; Custom Faces
 
 ;; Automatically initialized unless already defined.
-(defface hl-indent-scope-odd-face (list (list t))
+(defface hl-indent-scope-odd-face '((t))
   "Face used for odd columns."
   :group 'hl-indent-scope)
-(defface hl-indent-scope-even-face (list (list t))
+(defface hl-indent-scope-even-face '((t))
   "Face used for even columns."
   :group 'hl-indent-scope)
 
@@ -497,7 +497,7 @@ Inverse of `color-values'."
 (defun hl-indent-scope--auto-color-calc ()
   "Calculate auto colors."
   (declare (important-return-value nil))
-  (pcase-let ((`(,color-lo ,color-hi) (hl-indent-scope--auto-color-tint-list (list 8 16))))
+  (pcase-let ((`(,color-lo ,color-hi) (hl-indent-scope--auto-color-tint-list '(8 16))))
     (custom-set-faces
      (list 'hl-indent-scope-odd-face (list (list t (list :background color-lo))))
      (list 'hl-indent-scope-even-face (list (list t (list :background color-hi)))))))
@@ -672,7 +672,7 @@ checking the entire buffer."
       ;; (overlay-put item-ov 'face '(:background "#000000" :extend t))
 
       (overlay-put item-ov 'hl-indent-scope-pending t)
-      (overlay-put item-ov 'evaporate 't)
+      (overlay-put item-ov 'evaporate t)
 
       (setq hl-indent-scope--idle-overlay-last item-ov))))
 

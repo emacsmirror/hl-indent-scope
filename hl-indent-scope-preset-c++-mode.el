@@ -24,7 +24,7 @@
          (pos (1- (point)))
          (ch (char-before pos)))
 
-    (while (or (eq ch ?\s) (eq ch ?\t))
+    (while (memq ch '(?\s ?\t))
       (decf pos)
       (setq ch (char-before pos)))
 
@@ -45,12 +45,12 @@
          (pos (1- (point)))
          (ch (char-before pos)))
 
-    (while (or (eq ch ?\s) (eq ch ?\t))
+    (while (memq ch '(?\s ?\t))
       (decf pos)
       (setq ch (char-before pos)))
 
     ;; Check this is a word (potentially the end of a `namespace' identifier).
-    (when (memq (char-syntax ch) (list ?w ?_))
+    (when (memq (char-syntax ch) '(?w ?_))
       ;; We have found a trailing identifier that could be part of a `namespace'.
       ;; Allow for slower logic here as it's likely to run _much_ less often
       ;; than regular constructs (functions, conditionals, etc.).

@@ -55,7 +55,7 @@
       (goto-char (pos-bol))
       (while (and search (< (point) end))
         (unless (looking-at-p "[[:blank:]]*$")
-          (when (memq (char-after (point)) (list ?\s ?\t))
+          (when (memq (char-after (point)) '(?\s ?\t))
             (setq has-indent t))
           (setq search nil))
         (unless (zerop (forward-line 1))
@@ -220,7 +220,7 @@ Commands before BEG may be included depending on expansion."
   "Non-nil when POS is at a comment."
   ;; See: Syntax Table Internals.
   ;; Comment start/end or generic comment.
-  (memq (car (syntax-after pos)) (list 11 12 14)))
+  (memq (car (syntax-after pos)) '(11 12 14)))
 
 (defsubst hl-indent-scope-preset-python--is-string-at-point-before (pos limit)
   "Non-nil when POS is part of a multi-line string starting before LIMIT."
@@ -234,7 +234,7 @@ Commands before BEG may be included depending on expansion."
 
 (defsubst hl-indent-scope-preset-python--is-space-at-point (pos)
   "Non-nil when POS is at blank-space."
-  (memq (char-after pos) (list ?\n ?\s ?\t)))
+  (memq (char-after pos) '(?\n ?\s ?\t)))
 
 (defsubst hl-indent-scope-preset-python--line-indent-is-atleast-or-ignore (ident-limit)
   "Non-nil when indentation at line beginning is at least IDENT-LIMIT."

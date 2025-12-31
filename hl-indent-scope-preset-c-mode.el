@@ -24,7 +24,7 @@
          (pos (1- (point)))
          (ch (char-before pos)))
 
-    (while (or (eq ch ?\s) (eq ch ?\t))
+    (while (memq ch '(?\s ?\t))
       (decf pos)
       (setq ch (char-before pos)))
 
