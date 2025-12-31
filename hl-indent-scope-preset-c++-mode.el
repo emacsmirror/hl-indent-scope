@@ -61,7 +61,7 @@
 
     found))
 
-(defun hl-indent-scope-preset-c++--show-block-fn (level)
+(defun hl-indent-scope-preset-c++-mode--show-block-fn (level)
   "Callback for `hl-indent-scope-show-block-fn' at LEVEL."
   (declare (important-return-value t))
   (cond
@@ -83,7 +83,7 @@
   (declare (important-return-value nil))
   (when args
     (message "Currently ARGS aren't used!"))
-  (setq hl-indent-scope-show-block-fn 'hl-indent-scope-preset-c++--show-block-fn))
+  (setq hl-indent-scope-show-block-fn 'hl-indent-scope-preset-c++-mode--show-block-fn))
 
 (provide 'hl-indent-scope-preset-c++-mode)
 ;; Local Variables:

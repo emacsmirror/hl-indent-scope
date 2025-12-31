@@ -17,7 +17,7 @@
 (eval-when-compile
   (require 'hl-indent-scope))
 
-(defun hl-indent-scope-preset-glsl--show-block-fn (_level)
+(defun hl-indent-scope-preset-glsl-mode--show-block-fn (_level)
   "Callback for `hl-indent-scope-show-block-fn' at LEVEL."
   (declare (important-return-value t))
   (eq (char-before (point)) ?{))
@@ -29,7 +29,7 @@
   (declare (important-return-value nil))
   (when args
     (message "Currently ARGS aren't used!"))
-  (setq hl-indent-scope-show-block-fn 'hl-indent-scope-preset-glsl--show-block-fn))
+  (setq hl-indent-scope-show-block-fn 'hl-indent-scope-preset-glsl-mode--show-block-fn))
 
 (provide 'hl-indent-scope-preset-glsl-mode)
 ;; Local Variables:
