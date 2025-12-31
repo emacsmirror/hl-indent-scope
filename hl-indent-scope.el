@@ -712,6 +712,9 @@ checking the entire buffer."
   (jit-lock-unregister #'hl-indent-scope--idle-font-lock-region-pending)
   (hl-indent-scope--overlays-remove)
   (hl-indent-scope--idle-overlays-remove)
+  (when hl-indent-scope--idle-timer
+    (cancel-timer hl-indent-scope--idle-timer))
+
   (kill-local-variable 'hl-indent-scope--idle-overlay-last)
   (kill-local-variable 'hl-indent-scope--idle-timer))
 
