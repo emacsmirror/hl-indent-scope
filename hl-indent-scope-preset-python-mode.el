@@ -423,9 +423,10 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
 (defun hl-indent-scope-preset-python--tree-fn (beg end)
   "Return the tree between BEG and END."
   (declare (important-return-value t))
-  (let ((flat-keywords (hl-indent-scope-preset-python--flat-block-list beg end)))
-    (let ((tree (cdr (hl-indent-scope-preset-python--tree-fn-impl beg end flat-keywords 0))))
-      tree)))
+  (save-match-data
+    (let ((flat-keywords (hl-indent-scope-preset-python--flat-block-list beg end)))
+      (let ((tree (cdr (hl-indent-scope-preset-python--tree-fn-impl beg end flat-keywords 0))))
+        tree))))
 
 
 ;; ---------------------------------------------------------------------------
