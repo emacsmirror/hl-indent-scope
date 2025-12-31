@@ -33,7 +33,7 @@
       ;; Allow for slower logic here as it's likely to run _much_ less often
       ;; than regular constructs (functions, conditionals, etc.).
       (let ((str (buffer-substring-no-properties (pos-bol) pos)))
-        (when (string-match-p "\s*extern\s+\"[[:alpha:]]+\"" str)
+        (when (string-match-p "[[:blank:]]*extern[[:blank:]]+\"[[:alpha:]]+\"" str)
           (setq found t))))
 
     found))
@@ -56,7 +56,8 @@
       ;; than regular constructs (functions, conditionals, etc.).
       (let ((str (buffer-substring-no-properties (pos-bol) pos)))
         ;; Match `namespace identifier {` & `namespace {`.
-        (when (string-match-p "\s*namespace\\(s+[:_[:alpha:]]+\\)?" str)
+        (when (string-match-p
+               "[[:blank:]]*namespace\\([[:blank:]]+[_[:alpha:]][_[:alnum:]]*\\)?" str)
           (setq found t))))
 
     found))

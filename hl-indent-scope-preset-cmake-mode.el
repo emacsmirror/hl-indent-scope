@@ -23,13 +23,13 @@
    ;; Begin commands.
    "\\(if\\|function\\|while\\|macro\\|foreach\\)"
    ;; Trailing space & parenthesis.
-   "\\_>\s*("
+   "\\_>[[:blank:]]*("
 
    "\\|"
    ;; End commands.
    "\\(endif\\|endfunction\\|endwhile\\|endmacro\\|endforeach\\)"
    ;; Trailing space & parenthesis.
-   "\\_>\s*("))
+   "\\_>[[:blank:]]*("))
 
 (defun hl-indent-scope-preset-cmake--tree-impl (beg end use-match)
   "Recursive tree extraction for CMake in the range BEG to END.
