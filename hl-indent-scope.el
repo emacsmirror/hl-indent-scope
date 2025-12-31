@@ -623,7 +623,7 @@ checking the entire buffer."
 
             (when (condition-case-unless-debug err
                       ;; Needed so the idle timer won't quit mid-highlighting.
-                      (let ((inhibit-quit nil))
+                      (let ((inhibit-quit t))
                         (hl-indent-scope--font-lock-tree pos-beg pos-end)
                         t)
                     (error
