@@ -5,7 +5,7 @@
 
 ;; Author: Campbell Barton <ideasman42@gmail.com>
 
-;; URL: https://codeberg.org/ideasman42/emacs-hl-indent-scope-preset
+;; URL: https://codeberg.org/ideasman42/emacs-hl-indent-scope
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -32,7 +32,7 @@
    "\\_>\s*("))
 
 (defun hl-indent-scope-preset-cmake--tree-impl (beg end use-match)
-  "Recursive tree extraction for CMake in range BEG END.
+  "Recursive tree extraction for CMake in the range BEG to END.
 Argument USE-MATCH uses an existing match instead of a new search."
   (declare (important-return-value t))
   (let ((span (cons nil nil))
@@ -85,10 +85,10 @@ Argument USE-MATCH uses an existing match instead of a new search."
 
 (defun hl-indent-scope-preset-cmake--tree-fn (beg end)
   "Callback for `hl-indent-scope-tree-fn'.
-Return a tree in range BEG END."
+Return the tree in the range BEG to END."
   (declare (important-return-value t))
   (let ((tree nil)
-        ;; CMake uses case insensitive commands.
+        ;; CMake uses case-insensitive commands.
         (case-fold-search t))
     (goto-char (point-min))
     (save-match-data
@@ -107,10 +107,10 @@ Return a tree in range BEG END."
 
 ;;;###autoload
 (defun hl-indent-scope-preset-cmake-mode (&rest args)
-  "Presets for `cmake-mode' with optional ARGS keyword arguments."
+  "Preset for `cmake-mode' with optional ARGS keyword arguments."
   (declare (important-return-value nil))
   (when args
-    (message "Currently ARGS isn't used!"))
+    (message "Currently ARGS aren't used!"))
   (setq hl-indent-scope-fixed-width t)
   (setq hl-indent-scope-tree-fn 'hl-indent-scope-preset-cmake--tree-fn))
 

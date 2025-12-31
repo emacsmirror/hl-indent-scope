@@ -11,12 +11,12 @@
 
 ;;; Commentary:
 
-;; Highlight indentation by syntax (or user configurable methods).
+;; Highlight indentation by syntax (or user-configurable methods).
 ;; Currently this works for C-like and Lisp-like languages, with special
-;; support for C/C++ & CMake.
+;; support for C/C++, CMake, GLSL & Python.
 ;; Tabs are currently not supported.
 
-;;; Usage
+;;; Usage:
 
 ;; (hl-indent-scope-mode) ; Activate in the current buffer.
 
@@ -26,8 +26,8 @@
 ;;
 ;; - It's important never to use `char-syntax' when reading characters,
 ;;   as the same character may represent different brackets.
-;;   (C++ can use <> for angle brackets for as well as operators for e.g.)
-;;   Instead read the syntax table from the point e.g. `syntax-after'.
+;;   (C++ can use <> for angle brackets as well as operators, e.g.)
+;;   Instead read the syntax table from the point, e.g. `syntax-after'.
 
 
 ;; ---------------------------------------------------------------------------
@@ -55,14 +55,16 @@
 This is calculated by generating a tree extracted from the syntax-table."
   :group 'faces)
 
+;; NOTE: this value is intentionally not a round number
+;; to reduce the chance of colliding with other idle timers.
 (defcustom hl-indent-scope-idle-delay 0.2175
   "Idle time to wait before highlighting.
 Set to 0.0 to highlight immediately (as part of syntax highlighting)."
   :type 'float)
 
 (defcustom hl-indent-scope-fixed-width nil
-  "Use fixed width indentation (using `tab-width').
-Otherwise detect the indentation from it's contents."
+  "Use fixed-width indentation (using `tab-width').
+Otherwise detect the indentation from its contents."
   :type 'boolean)
 
 (defcustom hl-indent-scope-fill-empty-lines nil
@@ -70,7 +72,7 @@ Otherwise detect the indentation from it's contents."
   :type 'boolean)
 
 (defcustom hl-indent-scope-fill-over-text nil
-  "Display colors columns over non white-space characters."
+  "Display color columns over non-blank-space characters."
   :type 'boolean)
 
 (defcustom hl-indent-scope-preset t
@@ -101,7 +103,7 @@ Otherwise you must configure `hl-indent-scope-show-block-fn' yourself."
 Takes one LEVEL argument which represents the S-expression depth,
 taking only used levels into account.
 
-The (point) will be located at the start of the S-expression.
+Point will be located at the start of the S-expression.
 Typically (char-before (point)) can be used to check the kind of bracket.")
 
 (defvar-local hl-indent-scope-indent-block-fn nil
@@ -110,7 +112,7 @@ Typically (char-before (point)) can be used to check the kind of bracket.")
 (defvar-local hl-indent-scope-tree-fn nil
   "Function that returns the tree.
 
-This takes two arguments representing the range to return BEG & END.
+This takes two arguments representing the range to return, BEG and END.
 
 The resulting list is in the format: ((start . end) children-or-nil)
 All items in the lists (including children) should be ordered
@@ -119,9 +121,9 @@ from last to first.")
 ;; ---------------------------------------------------------------------------
 ;; Internal Variables
 
-;; Keep track of the last overlay, this allows expanding the existing overlay where possible.
+;; Keep track of the last overlay; this allows for expanding the existing overlay where possible.
 ;; Useful since font-locking often uses multiple smaller ranges which can be merged into one range.
-;; Always check this has not been deleted (has a valid buffer) before use.
+;; Always check that this has not been deleted (has a valid buffer) before use.
 (defvar-local hl-indent-scope--idle-overlay-last nil)
 
 (defvar-local hl-indent-scope--idle-timer nil)
@@ -131,7 +133,7 @@ from last to first.")
 ;; Generic Utility Functions
 
 (defmacro hl-indent-scope--setq-expand-range-to-line-boundaries (pos-beg pos-end)
-  "Set POS-BEG the the line beginning, POS-END to the line end."
+  "Set POS-BEG to the line beginning, POS-END to the line end."
   ;; Ignore field boundaries.
   (let ((inhibit-field-text-motion t))
     `(save-excursion
@@ -146,7 +148,7 @@ from last to first.")
 ;; Callback Implementations
 
 (defsubst hl-indent-scope--search-forward-open-sexp (end)
-  "Search forward syntax table for an opening bracket until END.
+  "Search forward in the syntax table for an opening bracket until END.
 This has the same behavior as `search-forward'."
   (skip-syntax-forward "^(" (1- end))
   (cond
@@ -175,7 +177,7 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
                      t)))))
      (t
       (setq found (hl-indent-scope--search-forward-open-sexp end))))
-    ;; Keep the point at it's current location unless a new point was found.
+    ;; Keep the point at its current location unless a new point was found.
     ;; While not essential, it's more difficult to reason about expected behavior
     ;; if a function that fails makes some change to the state.
     (unless found
@@ -183,8 +185,8 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
     found))
 
 (defun hl-indent-scope--top-sexp-by-syntax (beg)
-  "Seek BEG backwards to encompass the outer-most s-expression.
-If we are not already inside an s-expression, leave all-beg as-is."
+  "Seek BEG backward to encompass the outermost S-expression.
+If we are not already inside an S-expression, leave BEG as-is."
   (declare (important-return-value t))
   (cond
    (hl-indent-scope-show-block-fn
@@ -216,9 +218,9 @@ If we are not already inside an s-expression, leave all-beg as-is."
 ;; Shared Functions
 
 (defun hl-indent-scope--overlays-remove (&optional pos-beg pos-end)
-  "Remove symbol `hl-indent-scope-mode' overlays from current buffer.
-If optional arguments POS-BEG and POS-END exist
-remove overlays from range POS-BEG to POS-END
+  "Remove `hl-indent-scope' overlays from the current buffer.
+If optional arguments POS-BEG and POS-END exist,
+remove overlays from the range POS-BEG to POS-END.
 Otherwise remove all overlays."
   (declare (important-return-value nil))
   (remove-overlays pos-beg pos-end 'hl-indent-scope t))
@@ -226,14 +228,13 @@ Otherwise remove all overlays."
 
 ;; ---------------------------------------------------------------------------
 ;; Internal Bracket Functions
-;;
 
 (defun hl-indent-scope--tree-from-buffer-impl (all-beg all-end _beg end level)
   "Return a tree from the buffer.
 
 The format is ((start . end) children-or-nil)
 Arguments ALL-BEG, ALL-END are the full range.
-Arguments _BEG END are the range to use.
+Arguments _BEG, END are the range to use.
 Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
   (declare (important-return-value t))
   (let ((tree nil)
@@ -264,15 +265,15 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
     tree))
 
 (defun hl-indent-scope--tree-from-buffer (all-beg all-end)
-  "Return a tree in range ALL-BEG, ALL-END."
+  "Return a tree in the range ALL-BEG to ALL-END."
   (declare (important-return-value t))
-  ;; NOTE: caller must use `save-excursion'.
+  ;; Note: the caller must use `save-excursion'.
   (goto-char all-beg)
   (setq all-beg (hl-indent-scope--top-sexp-by-syntax all-beg))
   (hl-indent-scope--tree-from-buffer-impl all-beg all-end all-beg all-end 0))
 
 (defsubst hl-indent-scope--face-from-level (level)
-  "Return a face from the indentation LEVEL."
+  "Return a face for the indentation LEVEL."
   (cond
    ((zerop (mod level 2))
     'hl-indent-scope-even-face)
@@ -280,8 +281,8 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
     'hl-indent-scope-odd-face)))
 
 (defun hl-indent-scope--detect-indent (range-beg range-end stop)
-  "Detect the next indentation level in (RANGE-BEG RANGE-END).
-Argument STOP is the current indentation level, use for reference."
+  "Detect and return the next indentation level in the range RANGE-BEG to RANGE-END.
+Argument STOP is the current indentation level, used as a baseline."
   (declare (important-return-value t))
   (cond
    (hl-indent-scope-fixed-width
@@ -306,17 +307,16 @@ Argument STOP is the current indentation level, use for reference."
       stop-next))))
 
 (defun hl-indent-scope--propertize-stops (stops cache-empty-line-str)
-  "It's assumed the point is at the line start.
-Argument STOPS are the list of integer large to zero.
-Argument CACHE-EMPTY-LINE-STR stores the empty string."
+  "Apply indentation highlighting overlays to the current line.
+Argument STOPS is a list of (width . face) pairs from large to zero.
+Argument CACHE-EMPTY-LINE-STR stores the cached string for empty lines.
+Point must be at the line start."
   (declare (important-return-value nil))
   (let* ((pos-bol (point)) ; It's assumed (point) is at the beginning of the line.
          (pos-eol (pos-eol)))
     (cond
      ;; Empty line.
      ((eq pos-bol pos-eol)
-
-      ;; Otherwise do nothing.
       (when hl-indent-scope-fill-empty-lines
         ;; Empty line, add overlay.
         (when (null (car cache-empty-line-str))
@@ -326,7 +326,7 @@ Argument CACHE-EMPTY-LINE-STR stores the empty string."
               (let ((pos-end (car (pop stops))))
                 (while stops
                   (pcase-let ((`(,pos-beg . ,face) (pop stops)))
-                    ;; Unlikely but badly indented files can have stops that go backwards.
+                    ;; Unlikely, but badly indented files can have stops that go backward.
                     (when (< pos-beg pos-end)
                       (put-text-property pos-beg pos-end 'font-lock-face face ov-str)
                       (setq pos-end pos-beg)))))
@@ -334,15 +334,14 @@ Argument CACHE-EMPTY-LINE-STR stores the empty string."
 
         (let ((ov (make-overlay pos-bol pos-bol)))
           (overlay-put ov 'hl-indent-scope t)
-          ;; For some reason sharing strings is NOT working (use `concat').
           (overlay-put ov 'after-string (car cache-empty-line-str)))))
      (t
       (let ((pos-whitespace
              (cond
-              ;; Fill in background over any exiting text.
+              ;; Fill in background over any existing text.
               (hl-indent-scope-fill-over-text
                pos-eol)
-              ;; Fill in background until white-space ends.
+              ;; Fill in background until blank-space ends.
               (t
                (save-excursion
                  (skip-syntax-forward " " pos-eol)
@@ -354,7 +353,7 @@ Argument CACHE-EMPTY-LINE-STR stores the empty string."
                 (incf pos-beg pos-bol)
                 (when (< pos-beg pos-whitespace)
                   (setq pos-end (min pos-whitespace pos-end))
-                  ;; Unlikely but badly indented files can have stops that go backwards.
+                  ;; Unlikely, but badly indented files can have stops that go backward.
                   (when (< pos-beg pos-end)
                     ;; (put-text-property pos-beg pos-end 'font-lock-face face)
                     (let ((ov (make-overlay pos-beg pos-end)))
@@ -368,11 +367,15 @@ Argument CACHE-EMPTY-LINE-STR stores the empty string."
 
 Argument TREE is the nested tree to lock.
 
-Argument LEVEL an integer representing the depth of the tree.
+Argument LEVEL is an integer representing the depth of the tree.
 
 Argument STOPS is a list of indentation (width . face) pairs,
-ordered largest to smallest, always ending in zero:
-e.g: (list (8 . face) (4 . face) (0 . face)).
+ordered largest to smallest, always ending in zero,
+e.g.: (list (8 . face) (4 . face) (0 . face)).
+
+Argument CACHE-EMPTY-LINE-STR is a cons cell used to cache the
+overlay string for empty lines at this indentation level.
+
 Arguments ALL-BEG, ALL-END are the full range."
   (declare (important-return-value nil))
   (while tree
@@ -386,7 +389,7 @@ Arguments ALL-BEG, ALL-END are the full range."
                  (save-excursion
                    (goto-char range-beg)
                    (funcall hl-indent-scope-indent-block-fn level))))
-            ;; Check the new indentation is different.
+            ;; Check that the new indentation is different.
             (unless (eq indent-for-block (car (car stops)))
               ;; Replace the first item.
               (setq stops (cons (cons indent-for-block (cdr (car stops))) (cdr stops))))))
@@ -397,7 +400,7 @@ Arguments ALL-BEG, ALL-END are the full range."
                 (cons (cons i-next (hl-indent-scope--face-from-level level-next)) stops))
                (cache-empty-line-str-next (cons nil nil)))
 
-          ;; For zero level indentation there is nothing to do in-between members of the tree.
+          ;; For zero-level indentation there is nothing to do between members of the tree.
           (when (zerop level)
             (goto-char range-end)
             (goto-char (pos-bol)))
@@ -423,9 +426,8 @@ Arguments ALL-BEG, ALL-END are the full range."
             (forward-line -1)))))))
 
 (defun hl-indent-scope--font-lock-tree (all-beg all-end)
-  "Lock tree.
-Arguments ALL-BEG, ALL-END are the full range.
-This function moves the point, caller may wish to use `save-excursion'."
+  "Lock the tree.
+Arguments ALL-BEG, ALL-END are the full range."
   (declare (important-return-value nil))
   (hl-indent-scope--overlays-remove all-beg all-end)
   (save-excursion
@@ -447,10 +449,10 @@ This function moves the point, caller may wish to use `save-excursion'."
          (cons nil nil))))))
 
 (defun hl-indent-scope--font-lock-fontify-region (pos-beg pos-end)
-  "Update highlighting for POS-BEG & POS-END to the queue, checking all text."
+  "Update highlighting for POS-BEG to POS-END."
   (declare (important-return-value nil))
   (hl-indent-scope--setq-expand-range-to-line-boundaries
-   ;; Warning these values are set in place.
+   ;; Note: these values are set in place.
    pos-beg pos-end)
   (hl-indent-scope--font-lock-tree pos-beg pos-end))
 
@@ -461,7 +463,7 @@ This function moves the point, caller may wish to use `save-excursion'."
 ;; This logic is used when the face color isn't set.
 
 (defun hl-indent-scope--color-tint (a percent)
-  "Tint color A by PERCENT in range [-100..100]."
+  "Tint color A by PERCENT in the range [-100..100]."
   (declare (important-return-value t))
   (let ((factor (truncate (* 655.35 percent))))
     (cond
@@ -481,7 +483,7 @@ Inverse of `color-values'."
   (format "#%02x%02x%02x" (ash (aref color 0) -8) (ash (aref color 1) -8) (ash (aref color 2) -8)))
 
 (defun hl-indent-scope--auto-color-tint-list (tint-list)
-  "Return a list of colors, tinted by TINT-LIST which is a list of percentages."
+  "Return a list of colors, tinted by TINT-LIST, which is a list of percentages."
   (declare (important-return-value t))
   (let* ((bg-color (apply #'vector (color-values (face-attribute 'default :background))))
          (is-light-bg (> 98304 (+ (aref bg-color 0) (aref bg-color 1) (aref bg-color 2)))))
@@ -497,7 +499,7 @@ Inverse of `color-values'."
      tint-list)))
 
 (defun hl-indent-scope--auto-color-calc ()
-  "Calculation auto colors."
+  "Calculate auto colors."
   (declare (important-return-value nil))
   (pcase-let ((`(,color-lo ,color-hi) (hl-indent-scope--auto-color-tint-list (list 8 16))))
     (custom-set-faces
@@ -510,14 +512,14 @@ Inverse of `color-values'."
 
 ;;;###autoload
 (defun hl-indent-scope-preset (&rest args)
-  "Load a preset for current mode.
-ARGS the first two arguments are positional,
+  "Load a preset for the current mode.
+ARGS: the first two arguments are positional.
 The first is MODE-VALUE to override the current `major-mode'.
 The second is QUIET, when non-nil, don't show a message
 when the preset isn't found.
 The rest are expected to be keyword arguments,
-to control the behavior of each preset,
-see it's documentation for available keywords."
+to control the behavior of each preset;
+see its documentation for available keywords."
   (declare (important-return-value nil))
   (let ((mode-value nil)
         (quiet nil)
@@ -534,7 +536,7 @@ see it's documentation for available keywords."
           (pcase args-count
             (0 (setq mode-value arg))
             (1 (setq quiet arg))
-            (_ (error "Only two positional arguments must be given")))
+            (_ (error "At most two positional arguments may be given")))
           (incf args-count)
           (setq args (cdr args))))))
 
@@ -563,7 +565,7 @@ see it's documentation for available keywords."
                  (message "hl-indent-scope: preset %S not found! (%S)" mode-value err))
                nil))
         (apply preset-sym args)
-        ;; Signal not ot use automatic fallback.
+        ;; Signal not to use automatic fallback.
         t))))
 
 
@@ -573,7 +575,7 @@ see it's documentation for available keywords."
 (defun hl-indent-scope--immediate-enable ()
   "Enable immediate highlighting."
   (declare (important-return-value nil))
-  ;; Contextual locking is needed since lines need updating when s-expressions are modified.
+  ;; Contextual locking is needed since lines need updating when S-expressions are modified.
   (jit-lock-register #'hl-indent-scope--font-lock-fontify-region t))
 
 (defun hl-indent-scope--immediate-disable ()
@@ -587,18 +589,17 @@ see it's documentation for available keywords."
 ;; Timer Style (hl-indent-scope-idle-delay over zero)
 
 (defun hl-indent-scope--idle-overlays-remove (&optional pos-beg pos-end)
-  "Remove `hl-indent-scope-pending' overlays from current buffer.
-If optional arguments POS-BEG and POS-END exist
-remove overlays from range POS-BEG to POS-END
+  "Remove `hl-indent-scope-pending' overlays from the current buffer.
+If optional arguments POS-BEG and POS-END exist,
+remove overlays from the range POS-BEG to POS-END.
 Otherwise remove all overlays."
   (declare (important-return-value nil))
   (remove-overlays pos-beg pos-end 'hl-indent-scope-pending t))
 
 (defun hl-indent-scope--idle-handle-pending-ranges-impl (&optional all-beg all-end)
-  "ALL-BEG and ALL-END to clamp the pending regions used.
-
-Although you can pass in specific ranges as needed,
-when checking the entire buffer for example."
+  "Handle pending ranges, using ALL-BEG and ALL-END to clamp regions.
+You can also pass in specific ranges as needed, for example when
+checking the entire buffer."
   (declare (important-return-value nil))
   (let* ((clamp-range (and all-beg all-end))
          (overlays-in-view (overlays-in (or all-beg (point-min)) (or all-end (point-max)))))
@@ -615,19 +616,19 @@ when checking the entire buffer for example."
               (setq pos-beg (max all-beg pos-beg))
               (setq pos-end (min all-end pos-end)))
 
-            ;; Expand so we don't spell check half a word.
+            ;; Expand so we don't highlight half a line.
             (hl-indent-scope--setq-expand-range-to-line-boundaries
-             ;; Warning these values are set in place.
+             ;; Note: these values are set in place.
              pos-beg pos-end)
 
             (when (condition-case-unless-debug err
-                      ;; Needed so the idle timer won't quit mid-spelling.
+                      ;; Needed so the idle timer won't quit mid-highlighting.
                       (let ((inhibit-quit nil))
                         (hl-indent-scope--font-lock-tree pos-beg pos-end)
                         t)
                     (error
                      (progn
-                       ;; Keep since this should be very rare.
+                       ;; Kept since this should be very rare.
                        (message "Early exit 'hl-indent-scope-mode': %s" (error-message-string err))
                        ;; Break out of the loop.
                        (setq overlays-in-view nil)
@@ -640,7 +641,7 @@ when checking the entire buffer for example."
                 (delete-overlay item-ov))))))))))
 
 (defun hl-indent-scope--idle-handle-pending-ranges-timer-callback (buf)
-  "Callback that run the repeat timer for buffer BUF."
+  "Callback that runs the repeat timer for buffer BUF."
   (declare (important-return-value nil))
   (when (buffer-live-p buf)
     (with-current-buffer buf
@@ -651,21 +652,21 @@ when checking the entire buffer for example."
       (kill-local-variable 'hl-indent-scope--idle-timer))))
 
 (defun hl-indent-scope--idle-font-lock-region-pending (pos-beg pos-end)
-  "Track the range to spell check, adding POS-BEG & POS-END to the queue."
+  "Track the range to highlight, adding POS-BEG and POS-END to the queue."
   (declare (important-return-value nil))
   (when (and hl-indent-scope--idle-overlay-last
              (null (overlay-buffer hl-indent-scope--idle-overlay-last)))
     (setq hl-indent-scope--idle-overlay-last nil))
 
   (cond
-   ;; Extend forwards.
+   ;; Extend forward.
    ((and hl-indent-scope--idle-overlay-last
          (eq pos-beg (overlay-end hl-indent-scope--idle-overlay-last)))
     (move-overlay
      hl-indent-scope--idle-overlay-last
      (overlay-start hl-indent-scope--idle-overlay-last)
      pos-end))
-   ;; Extend backwards.
+   ;; Extend backward.
    ((and hl-indent-scope--idle-overlay-last
          (eq pos-end (overlay-start hl-indent-scope--idle-overlay-last)))
     (move-overlay
@@ -687,8 +688,8 @@ when checking the entire buffer for example."
    (t
     ;; Ideally we would just use the existing timer, but there is a very low chance
     ;; the timer has already run (if for some reason
-    ;; `hl-indent-scope--idle-handle-pending-ranges-timer-callback' is canceled for e.g.
-    ;; So use repeat and the timer can cancel it's self.
+    ;; `hl-indent-scope--idle-handle-pending-ranges-timer-callback' is canceled, for example).
+    ;; So use :repeat; the timer can cancel itself.
     (unless hl-indent-scope--idle-timer
       ;; Note that this is not actually a `:repeat' timer,
       ;; just done so we can be sure this runs until the callback disables the timer.
@@ -702,9 +703,9 @@ when checking the entire buffer for example."
 (defun hl-indent-scope--idle-enable ()
   "Enable the idle style of updating."
   (declare (important-return-value nil))
-  ;; Unlike with immediate style, idle / deferred checking isn't as likely to
+  ;; Unlike with immediate style, idle/deferred checking isn't as likely to
   ;; run before fonts have been checked.
-  ;; Nevertheless, this avoids the possibility of spell checking
+  ;; Nevertheless, this avoids the possibility of highlighting
   ;; running before font-faces have been set.
   (jit-lock-register #'hl-indent-scope--idle-font-lock-region-pending))
 
@@ -724,7 +725,7 @@ when checking the entire buffer for example."
 (defun hl-indent-scope--mode-enable ()
   "Turn on `hl-indent-scope-mode' for the current buffer."
   (declare (important-return-value nil))
-  ;; Batch mode, colors don't make sense (for testing).
+  ;; In batch mode, colors don't make sense (for testing).
   (unless noninteractive
     (when (or (eq 'unspecified (face-attribute 'hl-indent-scope-odd-face :background))
               (eq 'unspecified (face-attribute 'hl-indent-scope-even-face :background)))
@@ -733,9 +734,9 @@ when checking the entire buffer for example."
   (when hl-indent-scope-preset
     (cond
      ((hl-indent-scope-preset nil t)
-      ;; The preset was found & loaded, no further work needed.
+      ;; The preset was found and loaded; no further work needed.
       nil)
-     ;; When the language uses curly brackets, assume C family or similar.
+     ;; When the language uses curly brackets, assume the C family or similar.
      ((eq (char-syntax ?{) ?\()
       (setq hl-indent-scope-show-block-fn (lambda (_level) (eq (char-before (point)) ?{))))
      ;; Otherwise assume it's a Lisp.
@@ -766,7 +767,7 @@ when checking the entire buffer for example."
     (hl-indent-scope--idle-disable))))
 
 (defun hl-indent-scope--mode-turn-on ()
-  "Enable command `hl-indent-scope-mode'."
+  "Turn on `hl-indent-scope-mode'."
   (declare (important-return-value nil))
   (when (and (null (minibufferp)) (not (bound-and-true-p hl-indent-scope-mode)))
     (hl-indent-scope-mode 1)))
@@ -777,14 +778,14 @@ when checking the entire buffer for example."
 
 ;;;###autoload
 (defun hl-indent-scope-buffer ()
-  "One off syntax highlighting of indentation, use for testing."
+  "One-off syntax highlighting of indentation; used for testing."
   (declare (important-return-value nil))
   (interactive)
   (save-excursion (hl-indent-scope--font-lock-tree (point-min) (point-max))))
 
 ;;;###autoload
 (define-minor-mode hl-indent-scope-mode
-  "Highlight block under the cursor."
+  "Highlight the block under the cursor."
   :global nil
 
   (cond
@@ -795,7 +796,6 @@ when checking the entire buffer for example."
 
 ;;;###autoload
 (define-globalized-minor-mode global-hl-indent-scope-mode
-
   hl-indent-scope-mode
   hl-indent-scope--mode-turn-on)
 
