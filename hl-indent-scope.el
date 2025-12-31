@@ -150,6 +150,7 @@ from last to first.")
 (defsubst hl-indent-scope--search-forward-open-sexp (end)
   "Search forward in the syntax table for an opening bracket until END.
 This has the same behavior as `search-forward'."
+  (declare (important-return-value t))
   (skip-syntax-forward "^(" (1- end))
   (cond
    ;; 4 is the code for opening brackets, see:
@@ -274,6 +275,7 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
 
 (defsubst hl-indent-scope--face-from-level (level)
   "Return a face for the indentation LEVEL."
+  (declare (important-return-value t))
   (cond
    ((zerop (mod level 2))
     'hl-indent-scope-even-face)
