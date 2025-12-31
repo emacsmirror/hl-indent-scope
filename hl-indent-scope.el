@@ -551,7 +551,9 @@ see its documentation for available keywords."
        ((string-equal mode-value "c++-ts-mode")
         (setq mode-value "c++-mode"))
        ((string-equal mode-value "cmake-ts-mode")
-        (setq mode-value "cmake-mode"))))
+        (setq mode-value "cmake-mode"))
+       ((string-equal mode-value "glsl-ts-mode")
+        (setq mode-value "glsl-mode"))))
 
     (let ((preset-sym (intern (concat "hl-indent-scope-preset-" mode-value))))
       (when (condition-case err
