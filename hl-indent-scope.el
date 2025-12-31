@@ -401,10 +401,6 @@ Arguments ALL-BEG, ALL-END are the full range."
                (cache-empty-line-str-next (cons nil nil)))
 
           ;; For zero-level indentation there is nothing to do between members of the tree.
-          (when (zerop level)
-            (goto-char range-end)
-            (goto-char (pos-bol)))
-
           ;; TODO: avoid forward-line when we're jumping over values out of all{beg/end}
           (cond
            ((zerop level)
