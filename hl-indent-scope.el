@@ -335,6 +335,7 @@ Point must be at the line start."
 
         (let ((ov (make-overlay pos-bol pos-bol)))
           (overlay-put ov 'hl-indent-scope t)
+          (overlay-put ov 'evaporate t)
           (overlay-put ov 'after-string (car cache-empty-line-str)))))
      (t
       (let ((pos-whitespace
