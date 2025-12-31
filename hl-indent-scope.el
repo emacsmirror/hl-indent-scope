@@ -409,19 +409,23 @@ Arguments ALL-BEG, ALL-END are the full range."
             (goto-char range-end)
             (goto-char (pos-bol)))
            (t
-            (while (<= range-end (point))
-              (when (and (< (point) all-end) (<= all-beg (point)))
-                (hl-indent-scope--propertize-stops stops cache-empty-line-str))
-              (forward-line -1))))
+            (while (and (<= range-end (point))
+                        (progn
+                          (when (and (< (point) all-end) (<= all-beg (point)))
+                            (hl-indent-scope--propertize-stops stops cache-empty-line-str))
+                          (zerop (forward-line -1))))
+              nil)))
 
           (when children
             (hl-indent-scope--font-lock-tree-impl
              all-beg all-end children level-next stops-next cache-empty-line-str-next))
 
-          (while (<= range-beg (point))
-            (when (and (< (point) all-end) (<= all-beg (point)))
-              (hl-indent-scope--propertize-stops stops-next cache-empty-line-str-next))
-            (forward-line -1)))))))
+          (while (and (<= range-beg (point))
+                      (progn
+                        (when (and (< (point) all-end) (<= all-beg (point)))
+                          (hl-indent-scope--propertize-stops stops-next cache-empty-line-str-next))
+                        (zerop (forward-line -1))))
+            nil))))))
 
 (defun hl-indent-scope--font-lock-tree (all-beg all-end)
   "Lock the tree.
