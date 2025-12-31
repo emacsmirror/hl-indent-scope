@@ -31,12 +31,10 @@
    "\\(if\\|elif\\|while\\|for\\|def\\|class\\|except\\|with\\|match\\|case\\|"
    ;; Special case.
    "async[[:blank:]]+def\\)"
-   ;; Trailing space & parenthesis.
 
    "\\|"
    ;; Commands without arguments (group 3):
    "\\(else\\|try\\|finally\\)"
-   ;; Trailing space & parenthesis.
    "\\)"
    ;; End term.
    "\\_>"))
