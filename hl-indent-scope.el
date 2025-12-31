@@ -623,12 +623,11 @@ checking the entire buffer."
                         (hl-indent-scope--font-lock-tree pos-beg pos-end)
                         t)
                     (error
-                     (progn
-                       ;; Kept since this should be very rare.
-                       (message "Early exit 'hl-indent-scope-mode': %s" (error-message-string err))
-                       ;; Break out of the loop.
-                       (setq overlays-in-view nil)
-                       nil)))
+                     ;; Kept since this should be very rare.
+                     (message "Early exit 'hl-indent-scope-mode': %s" (error-message-string err))
+                     ;; Break out of the loop.
+                     (setq overlays-in-view nil)
+                     nil))
 
               (cond
                (clamp-range
