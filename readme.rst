@@ -4,7 +4,7 @@ Highlight Indent Scope
 
 This package highlights indentation based on scope (defined by the syntax-table).
 
-C & C-like language syntax is well supported as well as Lisp's.
+C & C-like language syntax is well supported as well as Lisps.
 Support is also included for CMake and Python.
 
 .. This is a PNG image.
@@ -21,7 +21,7 @@ Motivation
 ==========
 
 To provide indentation highlighting that works well for C/C++ projects,
-supporting indentation highlighting that is compatible un-indented pre-processor usage.
+supporting indentation highlighting that is compatible with un-indented pre-processor usage.
 
 Further, using scope as opposed to reading different indentation levels has some advantage
 in that scope can be differentiated from wrapped function calls (for example),
@@ -74,7 +74,7 @@ Customization
    Display color columns for blank lines.
 
 ``hl-indent-scope-fill-over-text``
-   Display colors columns over non white-space characters.
+   Display color columns over non white-space characters.
 
 ``hl-indent-scope-preset``: t
    Use the default preset for the major modes (when available).
@@ -126,7 +126,7 @@ Otherwise you may wish to override these functions to change behavior.
 
       This callback typically doesn't need to be set for any language with C-like syntax.
 
-      Lisps and it's variants are more likely to use different levels of indentation for nested
+      Lisps and their variants are more likely to use different levels of indentation for nested
       blocks, the following example shows how this can be set.
 
       The ``(point)`` will be located at the start of the S-expression.
@@ -145,10 +145,10 @@ Faces
 The background color for these faces if the background is not already customized or set by the theme.
 
 ``hl-indent-scope-odd-face``
-   This faces background should be set to the color of odd indentation columns.
+   This face's background should be set to the color of odd indentation columns.
 
 ``hl-indent-scope-even-face``
-   This faces background should be set to the color of even indentation columns.
+   This face's background should be set to the color of even indentation columns.
 
 
 Installation
