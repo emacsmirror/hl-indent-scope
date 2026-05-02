@@ -561,16 +561,22 @@ see its documentation for available keywords."
 
     (let ((preset-sym (intern (concat "hl-indent-scope-preset-" mode-value))))
       (when (condition-case err
-                (progn
-                  (require preset-sym)
-                  t)
+                (require preset-sym nil 'noerror)
               (error
-               (unless quiet
-                 (message "hl-indent-scope: preset %S not found! (%S)" mode-value err))
+               (lwarn
+                'hl-indent-scope
+                :error "preset %S failed: %s" mode-value (error-message-string err))
                nil))
-        (apply preset-sym args)
-        ;; Signal not to use automatic fallback.
-        t))))
+        (cond
+         ((fboundp preset-sym)
+          (apply preset-sym args)
+          ;; Signal not to use automatic fallback.
+          t)
+         (t
+          (lwarn
+           'hl-indent-scope
+           :error "preset %S loaded but did not define function `%S'" mode-value preset-sym)
+          nil))))))
 
 
 ;; ---------------------------------------------------------------------------
