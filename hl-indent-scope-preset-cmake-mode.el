@@ -39,7 +39,6 @@
 Argument USE-MATCH uses an existing match instead of a new search."
   (declare (important-return-value t))
   (let ((span (cons nil nil))
-        (span-beg-fallback nil)
         (children nil))
     (while (and (null (cdr span))
                 (cond
@@ -64,11 +63,9 @@ Argument USE-MATCH uses an existing match instead of a new search."
                 (setcar span (match-end 1)))
                (t
                 (let ((child (hl-indent-scope-preset-cmake--tree-impl beg end t)))
-                  (when child
-                    (unless span-beg-fallback
-                      (setq span-beg-fallback (car (car child))))
-                    (unless (eq t (cdr child))
-                      (push child children)))))))
+                  ;; Skip t (out of range).
+                  (when (and child (null (eq t (cdr child))))
+                    (push child children))))))
              ;; Note that an end command with no block to close is ignored,
              ;; ending the scan there would skip the rest of the buffer.
              ((and str-close (car span))
@@ -84,7 +81,8 @@ Argument USE-MATCH uses an existing match instead of a new search."
        (t
         (cons span children))))
      (children
-      (cons (cons span-beg-fallback (cdr (car (car children)))) children))
+      ;; Un-terminated, use the end of the last child that was found.
+      (cons (cons (car span) (cdr (car (car children)))) children))
      (t
       nil))))
 
