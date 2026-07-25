@@ -809,6 +809,8 @@ checking the entire buffer."
   (kill-local-variable 'hl-indent-scope-show-block-fn)
   (kill-local-variable 'hl-indent-scope-indent-block-fn)
   (kill-local-variable 'hl-indent-scope-tree-fn)
+  ;; Presets may override this customization buffer-locally.
+  (kill-local-variable 'hl-indent-scope-fixed-width)
 
   (cond
    ((<= hl-indent-scope-idle-delay 0.0)

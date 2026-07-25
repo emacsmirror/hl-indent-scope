@@ -111,7 +111,7 @@ Return the tree in the range BEG to END."
   (declare (important-return-value nil))
   (when args
     (message "Currently ARGS aren't used!"))
-  (setq hl-indent-scope-fixed-width t)
+  (setq-local hl-indent-scope-fixed-width t)
   (setq hl-indent-scope-tree-fn 'hl-indent-scope-preset-cmake--tree-fn))
 
 (provide 'hl-indent-scope-preset-cmake-mode)
