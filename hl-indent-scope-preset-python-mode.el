@@ -29,8 +29,10 @@
    "\\("
    ;; Commands with arguments (group 2):
    "\\(if\\|elif\\|while\\|for\\|def\\|class\\|except\\|with\\|match\\|case\\|"
-   ;; Special case.
-   "async[[:blank:]]+def\\)"
+   ;; Special case, the alternation is anchored to the line start,
+   ;; so the "async" prefix has to be part of the command to match.
+   ;; Note the shy group, the numbering above is relied upon.
+   "async[[:blank:]]+\\(?:def\\|for\\|with\\)\\)"
 
    "\\|"
    ;; Commands without arguments (group 3):

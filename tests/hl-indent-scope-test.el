@@ -488,6 +488,30 @@ to them, exactly as it does for a line inside brackets."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@ 3)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest python-async-blocks ()
+  "Every `async' block command opens a block, not only `async def'.
+The plain commands are included for contrast, they are unaffected."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       "async def run(cm, items):\n"
+       "@@@@async with cm as c:\n"
+       "@@@@$$$$await c.go()\n"
+       "@@@@async for i in items:\n"
+       "@@@@$$$$await i.go()\n"
+       "@@@@with cm as c:\n"
+       "@@@@$$$$c.go()\n"
+       "@@@@for i in items:\n"
+       "@@@@$$$$i.go()\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99
