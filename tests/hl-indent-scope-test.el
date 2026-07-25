@@ -72,15 +72,26 @@
     ;; Sort by the first element.
     (sort result (lambda (a b) (< (car a) (car b))))))
 
-(defun hl-indent-scope-test--do-test-on-current-buffer (char-odd char-even)
-  "Run a test on the current buffer using CHAR-ODD & CHAR-EVEN."
+(defun hl-indent-scope-test--do-test-on-current-buffer (char-odd char-even &optional line-beg)
+  "Run a test on the current buffer using CHAR-ODD & CHAR-EVEN.
+Optional LINE-BEG limits the range to that line onward,
+as font-locking a chunk of the buffer does."
 
   (hl-indent-scope-test--clean-buffer char-odd char-even)
 
   ;; Enable the mode so presets are loaded.
   (hl-indent-scope-mode)
 
-  (hl-indent-scope-buffer)
+  (cond
+   (line-beg
+    (hl-indent-scope--font-lock-fontify-region
+     (save-excursion
+       (goto-char (point-min))
+       (forward-line (1- line-beg))
+       (point))
+     (point-max)))
+   (t
+    (hl-indent-scope-buffer)))
 
   (dolist (ov-info (hl-indent-scope-test--from-overlays))
     (pcase-let ((`(,beg ,end ,is-odd) ov-info))
@@ -455,6 +466,26 @@ Blocks after it must be neither nested into it nor left out of the tree."
 
       (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
+(ert-deftest python-range-starting-in-a-multi-line-string ()
+  "A range starting on an un-indented line of a multi-line string is mid-block.
+The enclosing commands are before it, so the beginning must expand back
+to them, exactly as it does for a line inside brackets."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       "def f(a):\n"
+       ;; Note that this line is before the range so it isn't highlighted,
+       ;; expanding the beginning back to it only builds the tree from it.
+       "    s = \"\"\"\n" "text at column zero\n" "\"\"\"\n" "@@@@if a:\n" "@@@@$$$$pass\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@ 3)))
         (should (equal code-str-expect code-str-result))))))
 
 (provide 'hl-indent-scope-test)

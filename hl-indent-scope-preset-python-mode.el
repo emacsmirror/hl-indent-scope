@@ -92,14 +92,26 @@ Optional argument HAS-INDENT, when non-nil, skips the indentation check."
   ;;    ): # <- this line.
   ;;        pass
   ;; In this case "this line" should not be used as a beginning, skip over the bracket.
-  (let ((bracket-beg
+  (let ((container-beg
          (ignore-errors
-           (nth 1 (syntax-ppss beg)))))
-    (when bracket-beg
+           (let ((state (syntax-ppss beg)))
+             (cond
+              ;; A multi-line string is the same situation, its own lines may be
+              ;; un-indented while the command that opened the block is above it.
+              ;; e.g.
+              ;;    def function():
+              ;;        text = """
+              ;;    this line.
+              ;;    """
+              ((nth 3 state)
+               (nth 8 state))
+              (t
+               (nth 1 state)))))))
+    (when container-beg
       (save-excursion
-        (goto-char bracket-beg)
-        (setq bracket-beg (pos-bol)))
-      (setq beg (hl-indent-scope-preset-python--expand-back bracket-beg beg has-indent))))
+        (goto-char container-beg)
+        (setq container-beg (pos-bol)))
+      (setq beg (hl-indent-scope-preset-python--expand-back container-beg beg has-indent))))
 
   beg)
 
