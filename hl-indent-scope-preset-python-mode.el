@@ -240,18 +240,22 @@ Commands before BEG may be included depending on expansion."
   ;; Comment start/end or generic comment.
   (memq (car (syntax-after pos)) '(11 12 14)))
 
-(defsubst hl-indent-scope-preset-python--is-string-at-point-before (pos limit)
-  "Non-nil when POS is part of a multi-line string starting before LIMIT."
-  (let ((state (syntax-ppss pos)))
-    ;; This is a string.
-    (when (nth 3 state)
-      ;; Note that element 8 is where the string starts, element 2 is the last
-      ;; complete S-expression, which lands just before the string often enough
-      ;; to look correct, and is nil whenever the parse resumed inside it.
-      (let ((string-beg (nth 8 state)))
-        ;; Check if the string starts before the limit (the line beginning),
-        ;; making it a multi-line string.
-        (and string-beg (< string-beg limit))))))
+(defsubst hl-indent-scope-preset-python--is-continued-at-point-before (pos limit)
+  "Non-nil when POS continues a string or brackets that began before LIMIT."
+  (let* ((state (syntax-ppss pos))
+         (container-beg
+          (cond
+           ;; Note that element 8 is where the string starts, element 2 is the
+           ;; last complete S-expression, which lands just before the string
+           ;; often enough to look correct, and is nil whenever the parse
+           ;; resumed inside it.
+           ((nth 3 state)
+            (nth 8 state))
+           (t
+            (nth 1 state)))))
+    ;; Check it began before the limit (the line beginning), which is what
+    ;; makes this line a continuation of it rather than the start of one.
+    (and container-beg (< container-beg limit))))
 
 (defsubst hl-indent-scope-preset-python--is-space-at-point (pos)
   "Non-nil when POS is at blank-space."
@@ -271,11 +275,13 @@ over without extending the block, nil once the block has ended."
          ((eq ident-limit ident-curr)
           ;; At least at limit.
           1)
-         ;; Unindented parts of multi-line strings (that begin before `bol')
-         ;; are within the block, so they extend it, where a blank line that
-         ;; merely follows the block must not.  Checked before blank-space
-         ;; since blank lines inside the string are part of it too.
-         ((hl-indent-scope-preset-python--is-string-at-point-before (point) bol)
+         ;; Lines continuing a multi-line string or brackets (that begin before
+         ;; `bol') are within the block whatever their indentation, so they
+         ;; extend it, where a blank line that merely follows the block must
+         ;; not.  A closing bracket is often placed below the indentation of
+         ;; the block holding it.  Checked before blank-space since blank
+         ;; lines within the string or brackets are part of them too.
+         ((hl-indent-scope-preset-python--is-continued-at-point-before (point) bol)
           1)
          ;; Blank-space.
          ((hl-indent-scope-preset-python--is-space-at-point (point))

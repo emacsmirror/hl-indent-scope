@@ -638,6 +638,25 @@ off the line that dedented out of it can land on one."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest python-block-with-an-under-indented-bracket ()
+  "Lines continuing a bracket are within the block whatever their indentation.
+A closing bracket is often placed below the indentation of the block it
+is in, which must not end the block there."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       "def f():\n" "@@@@d = {\n" "@@@@    'a': 1,\n"
+       ;; Indented less than the block body.
+       "@@@}\n" "@@@@return d\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99
