@@ -342,14 +342,20 @@ Argument FLAT-KEYWORDS is used to build the tree.
 Argument IDENT-CURRENT is the current indentation level being scanned."
   (declare (important-return-value t))
   (let ((flat-keywords-next flat-keywords)
-        (tree-siblings (list)))
+        (tree-siblings (list))
+        ;; The indentation of `tree-siblings', nil until the first is found.
+        ;; This is IDENT-CURRENT except when the range begins mid-block,
+        ;; where the command that opened the block is before it.
+        (ident-sibling nil))
     (while flat-keywords
       (pcase-let ((`(,ident-ofs . (,_cmd-beg . ,cmd-end)) (pop flat-keywords)))
         (cond
          ((< ident-ofs ident-current)
           ;; Break.
           (setq flat-keywords nil))
-         ((> ident-ofs ident-current)
+         ;; Note that this nests into the last sibling, so it's that sibling's
+         ;; indentation which decides, not the level this scan was entered at.
+         ((and ident-sibling (> ident-ofs ident-sibling))
           (let ((last-sibling (car tree-siblings)))
             (pcase-let ((`(,flat-keywords-child . ,child-result)
                          (hl-indent-scope-preset-python--tree-fn-impl
@@ -385,6 +391,7 @@ Argument IDENT-CURRENT is the current indentation level being scanned."
           ;; Step.
           (setq flat-keywords-next flat-keywords))
          (t
+          (setq ident-sibling ident-ofs)
           ;; Add sibling.
           (goto-char cmd-end)
           (goto-char (pos-bol))

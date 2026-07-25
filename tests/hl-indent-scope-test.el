@@ -425,6 +425,38 @@ stops before reaching it."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest python-block-deeper-than-the-range ()
+  "A block deeper than the level being scanned must not error.
+Narrowing leaves the command that opened the block outside the accessible
+buffer, so there is nothing to expand the beginning back to and the first
+block found is deeper than the outermost level.
+Blocks after it must be neither nested into it nor left out of the tree."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       "def outer(a):\n" "    if a:\n" "@@@@@@@@pass\n"
+       ;; A block at the same indentation is a sibling, not nested inside.
+       "    if b:\n" "@@@@@@@@other()\n" "\n"
+       ;; A block below them must still be found,
+       ;; it is less indented so it ends the scan of those blocks.
+       "def g():\n" "@@@@body()\n")
+
+      ;; Hide the command that opened the block, as narrowing to a region does.
+      (narrow-to-region
+       (save-excursion
+         (goto-char (point-min))
+         (forward-line 1)
+         (point))
+       (point-max))
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99
