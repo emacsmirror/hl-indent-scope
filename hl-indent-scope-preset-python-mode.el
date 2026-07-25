@@ -34,8 +34,7 @@
 
    "\\|"
    ;; Commands without arguments (group 3):
-   "\\(else\\|try\\|finally\\)"
-   "\\)"
+   "\\(else\\|try\\|finally\\)" "\\)"
    ;; End term.
    "\\_>"))
 

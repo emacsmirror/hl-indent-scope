@@ -163,6 +163,51 @@
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest c-comments-and-blank-lines ()
+  "Indentation must be detected from code, not comments or blank lines.
+Each is the first indented line of its block, otherwise the scan
+stops before reaching it."
+  (let ((buf (generate-new-buffer "untitled.c")))
+    (with-current-buffer buf
+      (c-mode)
+      (setq-local tab-width 2)
+
+      (insert
+       ;; A comment lined up with something other than the code around it.
+       "int a(void)\n"
+       "{\n"
+       "@@    /* Over-indented comment. */\n"
+       "@@foo();\n"
+       "@@if (x) {\n"
+       "@@$$bar();\n"
+       "@@}\n"
+       "}\n"
+       "\n"
+       ;; A line of only blank-space.
+       "int b(void)\n"
+       "{\n"
+       "@@    \n"
+       "@@foo();\n"
+       "@@if (x) {\n"
+       "@@$$bar();\n"
+       "@@}\n"
+       "}\n"
+       "\n"
+       ;; The line a comment ends on, with code following it.
+       "int c(void)\n"
+       "{\n"
+       "@@/* Comment\n"
+       "@@       continued.\n"
+       "@@ */ foo();\n"
+       "@@if (x) {\n"
+       "@@$$bar();\n"
+       "@@}\n"
+       "}\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (ert-deftest c++-angle-brackets ()
   "Complex C test."
   (let ((buf (generate-new-buffer "untitled.cc")))

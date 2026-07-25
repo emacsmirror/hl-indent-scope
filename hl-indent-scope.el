@@ -281,6 +281,22 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
    (t
     'hl-indent-scope-odd-face)))
 
+(defun hl-indent-scope--skip-comment-or-nil ()
+  "Skip a comment at the point, returning its end, nil when at code.
+The whole comment is stepped over, an un-terminated one ends at the
+end of the accessible buffer.  The point must be at a non-blank
+character, it's only moved when a comment is skipped, to the result."
+  (declare (important-return-value t))
+  (let* ((state (syntax-ppss))
+         ;; Step from where a comment or string began, the point itself may be
+         ;; the opener which the state only reports once it's stepped over.
+         (scan-beg (or (nth 8 state) (point))))
+    (goto-char scan-beg)
+    ;; Note that `forward-comment' returns nil for an un-terminated comment
+    ;; even though it steps over it, so test the point.
+    (forward-comment 1)
+    (and (< scan-beg (point)) (point))))
+
 (defun hl-indent-scope--detect-indent (range-beg range-end stop)
   "Detect and return the next indentation level in the range RANGE-BEG to RANGE-END.
 Argument STOP is the current indentation level, used as a baseline."
@@ -300,9 +316,16 @@ Argument STOP is the current indentation level, used as a baseline."
             (let ((eol (pos-eol)))
               (let ((skip (skip-syntax-forward " " eol)))
                 (cond
-                 ((< stop skip)
-                  (setq stop-next skip)
-                  (setq found t))
+                 ;; Only detect from code, blank lines & comments are often
+                 ;; indented differently, widening every level nested inside.
+                 ((and (< stop skip) (< (point) eol))
+                  (cond
+                   ((hl-indent-scope--skip-comment-or-nil)
+                    ;; Continue from the line beginning, SKIP measures indentation.
+                    (setq pos-next (max (1+ eol) (pos-bol))))
+                   (t
+                    (setq stop-next skip)
+                    (setq found t))))
                  (t
                   (setq pos-next (1+ eol)))))))))
       stop-next))))
