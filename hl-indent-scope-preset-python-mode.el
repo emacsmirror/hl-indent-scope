@@ -307,8 +307,12 @@ Point must be at the line beginning."
 
     (goto-char pos)
 
-    ;; Ensure the line is not blank.
+    ;; Nothing was found, so the block ends above the line the scan started on,
+    ;; that line is the one which dedented out of it.  Blank lines are stepped
+    ;; back over as well, one indented as far as the block counts as part of it
+    ;; so the line stepped onto can be blank.
     (unless changed
+      (forward-line -1)
       (while (and (looking-at-p "[[:blank:]]*$")
                   ;; Ensure one line is stepped over
                   ;; in the unlikely event this reaches the buffer beginning.

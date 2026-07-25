@@ -594,6 +594,50 @@ column zero they must not be skipped over."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@ 3 5)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest python-block-end-past-a-dedent ()
+  "A block must not extend past the line that dedents out of it.
+The overshoot is only visible once it lands on the continuation line of
+the statement below, which is indented enough to be taken for the body."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       "def f(dirlist):\n"
+       "@@@@for d in dirlist:\n"
+       "@@@@$$$$for seq in range(10):\n"
+       "@@@@$$$$@@@@try:\n"
+       "@@@@$$$$@@@@$$$$pass\n"
+       "@@@@$$$$@@@@except OSError:\n"
+       "@@@@$$$$@@@@$$$$break\n"
+       "@@@@raise Error(a,\n"
+       "@@@@            b)\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
+(ert-deftest python-block-ending-on-a-blank-indented-line ()
+  "A block must not end on a blank line, even one indented to it.
+Such a line counts as part of the block while scanning, so stepping back
+off the line that dedented out of it can land on one."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       "def f():\n" "@@@@for d in x:\n" "@@@@$$$$pass\n"
+       ;; Blank, but indented as far as the block body.
+       "        \n" "top_level()\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99
