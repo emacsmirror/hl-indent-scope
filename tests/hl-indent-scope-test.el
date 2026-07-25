@@ -72,9 +72,17 @@
     ;; Sort by the first element.
     (sort result (lambda (a b) (< (car a) (car b))))))
 
-(defun hl-indent-scope-test--do-test-on-current-buffer (char-odd char-even &optional line-beg)
+(defun hl-indent-scope-test--pos-from-line (line)
+  "Return the position at the beginning of LINE."
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line (1- line))
+    (point)))
+
+(defun hl-indent-scope-test--do-test-on-current-buffer
+    (char-odd char-even &optional line-beg line-end)
   "Run a test on the current buffer using CHAR-ODD & CHAR-EVEN.
-Optional LINE-BEG limits the range to that line onward,
+Optional LINE-BEG & LINE-END limit the range to those lines,
 as font-locking a chunk of the buffer does."
 
   (hl-indent-scope-test--clean-buffer char-odd char-even)
@@ -83,13 +91,20 @@ as font-locking a chunk of the buffer does."
   (hl-indent-scope-mode)
 
   (cond
-   (line-beg
+   ((or line-beg line-end)
+    ;; Note that the range is expanded to line boundaries by the callee,
+    ;; so LINE-END is included even though this is its beginning.
     (hl-indent-scope--font-lock-fontify-region
-     (save-excursion
-       (goto-char (point-min))
-       (forward-line (1- line-beg))
-       (point))
-     (point-max)))
+     (cond
+      (line-beg
+       (hl-indent-scope-test--pos-from-line line-beg))
+      (t
+       (point-min)))
+     (cond
+      (line-end
+       (hl-indent-scope-test--pos-from-line line-end))
+      (t
+       (point-max)))))
    (t
     (hl-indent-scope-buffer)))
 
@@ -526,6 +541,57 @@ they are inside it, so the block does not end before them."
 
       (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
+(ert-deftest python-range-starting-at-a-column-zero-comment ()
+  "A comment at column zero does not mean the range is at the outermost level.
+Comments sit at any indentation, commented out code and section markers
+are routinely left at column zero within a block, so the beginning must
+still expand back to the commands that opened it."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       ;; Note that these lines are before the range so they aren't
+       ;; highlighted, expanding back to them only builds the tree.
+       "class C:\n"
+       "    def a(self):\n"
+       "        pass\n"
+       "\n"
+       "## comment at column zero\n"
+       "\n"
+       "@@@@def b(self):\n"
+       "@@@@$$$$pass\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@ 5)))
+        (should (equal code-str-expect code-str-result))))))
+
+(ert-deftest python-range-of-indented-comments ()
+  "A range holding nothing but indented comments is still mid-block.
+Being indented they answer this on their own, so unlike a comment at
+column zero they must not be skipped over."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert
+       "class C:\n"
+       "    def a(self):\n"
+       "@@@@$$$$# comment one\n"
+       "@@@@$$$$# comment two\n"
+       "@@@@$$$$# comment three\n"
+       ;; Note that the range ends above this line, so it isn't highlighted.
+       ;; The comments are all there is to answer from.
+       "        pass\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@ 3 5)))
         (should (equal code-str-expect code-str-result))))))
 
 (provide 'hl-indent-scope-test)

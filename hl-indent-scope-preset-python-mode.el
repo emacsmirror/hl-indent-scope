@@ -45,7 +45,9 @@
 ;; Implement `hl-indent-scope-tree-fn'
 
 (defun hl-indent-scope-preset-python--range-has-indentation (beg end)
-  "Return non-nil if text between BEG and END is indented."
+  "Return non-nil if text between BEG and END is indented.
+Blank lines and comments at column zero are skipped over,
+neither answers this."
   (declare (important-return-value t))
   (let ((search t)
         (has-indent nil))
@@ -53,7 +55,12 @@
       (goto-char beg)
       (goto-char (pos-bol))
       (while (and search (< (point) end))
-        (unless (looking-at-p "[[:blank:]]*$")
+        ;; Note that only a comment at column zero is skipped, commented out
+        ;; code and section markers are routinely left there within a block so
+        ;; it doesn't mean the outermost level.  Skipping indented comments too
+        ;; would be wrong, a range can hold nothing else and would then report
+        ;; no indentation at all.
+        (unless (or (looking-at-p "[[:blank:]]*$") (eq (char-after (point)) ?#))
           (when (memq (char-after (point)) '(?\s ?\t))
             (setq has-indent t))
           (setq search nil))
