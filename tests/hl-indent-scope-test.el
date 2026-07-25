@@ -257,6 +257,27 @@ stops before reaching it."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest cmake-command-name-boundaries ()
+  "Commands that merely end with a keyword must not begin or end a block."
+  (let ((buf (generate-new-buffer "untitled.cmake")))
+    (with-current-buffer buf
+      ;; CMake is a 3rd party package, fake the mode.
+      (setq-local major-mode 'cmake-mode)
+      (setq-local tab-width 2)
+      (insert
+       "if(TRUE)\n"
+       "@@my_endif(a)\n"
+       "@@my_if(b)\n"
+       "@@foreach(X IN MY_LIST)\n"
+       "@@$$my_endforeach(c)\n"
+       "@@$$message(d)\n"
+       "@@endforeach()\n"
+       "endif()\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (ert-deftest python-simple ()
   "Simple Python test."
   (let ((buf (generate-new-buffer "untitled.py")))

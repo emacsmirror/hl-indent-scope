@@ -26,6 +26,9 @@
    "\\_>[[:blank:]]*("
 
    "\\|"
+   ;; Note that the alternation is top-level, so this needs its own
+   ;; symbol-start or a command such as `my_endif' would end a block.
+   "\\_<"
    ;; End commands.
    "\\(endif\\|endfunction\\|endwhile\\|endmacro\\|endforeach\\)"
    ;; Trailing space & parenthesis.
