@@ -404,6 +404,27 @@ stops before reaching it."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest python-under-indented-multi-line-string ()
+  "A block must not end at a multi-line string that is under-indented."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert "def f():\n" "@@@@print(\"\"\"Summary line.\n")
+      ;; The padding is what makes this fail, `syntax-ppss' re-parses from the
+      ;; top while the last position it stored is within 2500 characters, so
+      ;; the string has to be longer than that before a parse resumes inside it.
+      ;; Lines indented to the block are never asked, only the two below are.
+      (dotimes (i 80)
+        (insert (format "@@@@padding line %d of the summary text.\n" i)))
+      (insert "@@under indented one\n" "@@under indented two\n" "\"\"\")\n" "@@@@return 1\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99

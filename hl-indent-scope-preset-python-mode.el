@@ -224,7 +224,10 @@ Commands before BEG may be included depending on expansion."
   (let ((state (syntax-ppss pos)))
     ;; This is a string.
     (when (nth 3 state)
-      (let ((string-beg (nth 2 state)))
+      ;; Note that element 8 is where the string starts, element 2 is the last
+      ;; complete S-expression, which lands just before the string often enough
+      ;; to look correct, and is nil whenever the parse resumed inside it.
+      (let ((string-beg (nth 8 state)))
         ;; Check if the string starts before the limit (the line beginning),
         ;; making it a multi-line string.
         (and string-beg (< string-beg limit))))))
