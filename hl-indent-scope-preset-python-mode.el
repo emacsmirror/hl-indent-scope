@@ -251,7 +251,9 @@ Commands before BEG may be included depending on expansion."
   (memq (char-after pos) '(?\n ?\s ?\t)))
 
 (defsubst hl-indent-scope-preset-python--line-indent-is-atleast-or-ignore (ident-limit)
-  "Non-nil when indentation at line beginning is at least IDENT-LIMIT."
+  "Non-nil when indentation at line beginning is at least IDENT-LIMIT.
+Return 1 when the line is part of the block, -1 when it is to be stepped
+over without extending the block, nil once the block has ended."
   (save-excursion
     ;; (unless (eq (point) (pos-bol))
     ;;   (error "Expected BOL"))
@@ -262,14 +264,17 @@ Commands before BEG may be included depending on expansion."
          ((eq ident-limit ident-curr)
           ;; At least at limit.
           1)
+         ;; Unindented parts of multi-line strings (that begin before `bol')
+         ;; are within the block, so they extend it, where a blank line that
+         ;; merely follows the block must not.  Checked before blank-space
+         ;; since blank lines inside the string are part of it too.
+         ((hl-indent-scope-preset-python--is-string-at-point-before (point) bol)
+          1)
          ;; Blank-space.
          ((hl-indent-scope-preset-python--is-space-at-point (point))
           -1)
          ;; Ignore comments.
          ((hl-indent-scope-preset-python--is-comment-at-point (point))
-          -1)
-         ;; Ignore unindented parts of multi-line strings (that begin before `bol').
-         ((hl-indent-scope-preset-python--is-string-at-point-before (point) bol)
           -1)
          (t
           nil))))))

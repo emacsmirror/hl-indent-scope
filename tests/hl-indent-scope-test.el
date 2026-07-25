@@ -512,6 +512,22 @@ The plain commands are included for contrast, they are unaffected."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest python-block-ending-in-a-multi-line-string ()
+  "A multi-line string extends the block it is part of.
+Its lines may be indented less than the block, but unlike blank lines
+they are inside it, so the block does not end before them."
+  (let ((buf (generate-new-buffer "untitled.py")))
+    (with-current-buffer buf
+      (setq python-indent-guess-indent-offset nil)
+      (python-mode)
+      (setq tab-width 4)
+
+      (insert "def f():\n" "@@@@x = 1\n" "@@@@s = \"\"\"doc\n" "@@@under indented\n" "@@@\"\"\"\n")
+
+      (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
+            (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
+        (should (equal code-str-expect code-str-result))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99
