@@ -69,7 +69,9 @@ Argument USE-MATCH uses an existing match instead of a new search."
                       (setq span-beg-fallback (car (car child))))
                     (unless (eq t (cdr child))
                       (push child children)))))))
-             (str-close
+             ;; Note that an end command with no block to close is ignored,
+             ;; ending the scan there would skip the rest of the buffer.
+             ((and str-close (car span))
               ;; Break.
               (setcdr span (match-beginning 2))))))))
     (cond
