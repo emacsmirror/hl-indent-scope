@@ -142,6 +142,48 @@ from last to first.")
        (goto-char ,pos-beg)
        (setq ,pos-beg (pos-bol)))))
 
+(defsubst hl-indent-scope--id-before-point-p (id)
+  "Return non-nil when ID occurs immediately before point.
+ID must contain only word or symbol syntax characters.
+Only the accessible portion of the buffer is scanned,
+so narrowing part way into an identifier may match its tail."
+  (declare (important-return-value t))
+  (let* ((id-end (point))
+         (id-beg (- id-end (length id))))
+    (and
+     ;; Reject an empty ID as well as one that cannot fit before point.
+     (< id-beg id-end)
+     (<= (point-min) id-beg) (string-equal (buffer-substring-no-properties id-beg id-end) id)
+     (save-excursion
+       (goto-char id-beg)
+       ;; Reject a word or symbol character before ID,
+       ;; as that makes ID the suffix of a longer identifier.
+       (zerop (skip-syntax-backward "w_" (max (point-min) (1- id-beg))))))))
+
+(defsubst hl-indent-scope--skip-comments-backward ()
+  "Move point backward over any whitespace and comments."
+  (declare (important-return-value nil))
+  ;; The negative count is the distance to scan, so this is unbounded.
+  (forward-comment (- (point))))
+
+(defsubst hl-indent-scope--skip-string-backward ()
+  "Move point before the string ending at point.
+Return nil without moving point when it isn't preceded by a complete string."
+  (declare (important-return-value t))
+  ;; 7 is the code for string quotes, see:
+  ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Syntax-Table-Internals.html
+  (and (eq 7 (car (syntax-after (1- (point)))))
+       ;; Scan over the whole string, rejecting incomplete code.
+       (let ((string-beg
+              (ignore-errors
+                (scan-sexps (point) -1))))
+         (and string-beg
+              ;; Check the scan didn't step over some other kind of S-expression.
+              (eq 7 (car (syntax-after string-beg)))
+              (progn
+                (goto-char string-beg)
+                t)))))
+
 
 ;; ---------------------------------------------------------------------------
 ;; Callback Implementations

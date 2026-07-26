@@ -20,47 +20,51 @@
 (defsubst hl-indent-scope-preset-c++-mode--is-top-level-extern ()
   "Return t when point is part of an `extern' block."
   (declare (important-return-value t))
-  (let* ((found nil)
-         (pos (1- (point)))
-         (ch (char-before pos)))
-
-    (while (memq ch '(?\s ?\t))
-      (decf pos)
-      (setq ch (char-before pos)))
-
-    (when (eq ch ?\")
-      ;; We have found `" {` which is likely to be an `extern'.
-      ;; Allow for slower logic here as it's likely to run _much_ less often
-      ;; than regular constructs (functions, conditionals, etc.).
-      (let ((str (buffer-substring-no-properties (pos-bol) pos)))
-        (when (string-match-p "[[:blank:]]*extern[[:blank:]]+\"[[:alpha:]]+\"" str)
-          (setq found t))))
-
-    found))
+  (save-excursion
+    ;; Move from after the opening brace to the preceding token, allowing
+    ;; whitespace and comments between it and the brace.
+    (backward-char 1)
+    (hl-indent-scope--skip-comments-backward)
+    ;; Step over the linkage, the `"C"' of `extern "C" {'.
+    (when (hl-indent-scope--skip-string-backward)
+      (hl-indent-scope--skip-comments-backward)
+      (hl-indent-scope--id-before-point-p "extern"))))
 
 (defsubst hl-indent-scope-preset-c++-mode--is-top-level-namespace ()
   "Return t when point is part of a `namespace' block."
   (declare (important-return-value t))
-  (let* ((found nil)
-         (pos (1- (point)))
-         (ch (char-before pos)))
-
-    (while (memq ch '(?\s ?\t))
-      (decf pos)
-      (setq ch (char-before pos)))
-
-    ;; Check this is a word (potentially the end of a `namespace' identifier).
-    (when (memq (char-syntax ch) '(?w ?_))
-      ;; We have found a trailing identifier that could be part of a `namespace'.
-      ;; Allow for slower logic here as it's likely to run _much_ less often
-      ;; than regular constructs (functions, conditionals, etc.).
-      (let ((str (buffer-substring-no-properties (pos-bol) pos)))
-        ;; Match `namespace identifier {` & `namespace {`.
-        (when (string-match-p
-               "[[:blank:]]*namespace\\([[:blank:]]+[_[:alpha:]][_[:alnum:]]*\\)?" str)
-          (setq found t))))
-
-    found))
+  (save-excursion
+    ;; Move from after the opening brace to the preceding token, allowing
+    ;; whitespace and comments between it and the brace.
+    (backward-char 1)
+    (hl-indent-scope--skip-comments-backward)
+    ;; Step back over the name, which may be nested, e.g. `namespace a::b {'.
+    ;; NOTE: an attribute between the keyword and the name is not detected,
+    ;; e.g. `namespace [[deprecated]] a {'. In practice this is rare enough
+    ;; that it doesn't justify scanning back over brackets, so leave as-is.
+    (let ((found nil)
+          (scan t))
+      (while scan
+        (setq scan nil)
+        (cond
+         ;; An anonymous namespace has no name before the brace.
+         ((hl-indent-scope--id-before-point-p "namespace")
+          (setq found t))
+         ((not (zerop (skip-syntax-backward "w_")))
+          (hl-indent-scope--skip-comments-backward)
+          ;; A nested name may be inline, e.g. `namespace a::inline b {'.
+          (when (hl-indent-scope--id-before-point-p "inline")
+            (skip-syntax-backward "w_")
+            (hl-indent-scope--skip-comments-backward))
+          (cond
+           ((hl-indent-scope--id-before-point-p "namespace")
+            (setq found t))
+           ;; Step over `::' to check the component before it.
+           ((and (eq (char-before) ?:) (eq (char-before (1- (point))) ?:))
+            (backward-char 2)
+            (hl-indent-scope--skip-comments-backward)
+            (setq scan t))))))
+      found)))
 
 (defun hl-indent-scope-preset-c++-mode--show-block-fn (level)
   "Callback for `hl-indent-scope-show-block-fn' at LEVEL."

@@ -79,6 +79,21 @@
     (forward-line (1- line))
     (point)))
 
+(defun hl-indent-scope-test--tree-from-code (mode code)
+  "Return the indentation scope tree for CODE using the preset for MODE."
+  (with-temp-buffer
+    (funcall mode)
+    (insert code)
+    (hl-indent-scope-preset)
+    (save-excursion (hl-indent-scope--tree-from-buffer (point-min) (point-max)))))
+
+(defun hl-indent-scope-test--tree-depth (tree)
+  "Return the number of levels TREE nests, zero when it is empty."
+  (let ((depth 0))
+    (dolist (branch tree)
+      (setq depth (max depth (1+ (hl-indent-scope-test--tree-depth (cdr branch))))))
+    depth))
+
 (defun hl-indent-scope-test--do-test-on-current-buffer
     (char-odd char-even &optional line-beg line-end)
   "Run a test on the current buffer using CHAR-ODD & CHAR-EVEN.
@@ -233,6 +248,83 @@ stops before reaching it."
       (let ((code-str-expect (buffer-substring-no-properties (point-min) (point-max)))
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
+
+(defun hl-indent-scope-test--extern-block-layouts (mode)
+  "Check that extern block layouts are hidden by the preset for MODE."
+  (dolist (code-extern
+           '("extern \"C\"\n{\n"
+             "extern \"C\" /* comment */ {\n"
+             "extern /* comment */ \"C\" {\n"
+             "extern \"C++\" {\n"))
+    ;; Only the function may add a level, checking the depth instead of an
+    ;; empty tree ensures code that fails to parse can't pass the test.
+    (should
+     (equal
+      1
+      (hl-indent-scope-test--tree-depth
+       (hl-indent-scope-test--tree-from-code
+        mode (concat code-extern "int a(void)\n{\nfoo();\n}\n}\n")))))))
+
+(ert-deftest c-extern-block-layouts ()
+  "Extern blocks remain hidden when whitespace, comments, or linkage vary."
+  (hl-indent-scope-test--extern-block-layouts #'c-mode))
+
+(ert-deftest c++-extern-block-layouts ()
+  "Extern blocks remain hidden when whitespace, comments, or linkage vary."
+  (hl-indent-scope-test--extern-block-layouts #'c++-mode))
+
+(defun hl-indent-scope-test--extern-keyword-boundary (mode)
+  "Check that an identifier ending in `extern' is not extern in MODE."
+  ;; Both the outer block and the function add a level.
+  (should
+   (equal
+    2
+    (hl-indent-scope-test--tree-depth
+     (hl-indent-scope-test--tree-from-code
+      mode "notextern \"C\" {\nint a(void)\n{\nfoo();\n}\n}\n")))))
+
+(ert-deftest c-extern-keyword-boundary ()
+  "An `extern' suffix in an identifier must not hide a C block."
+  (hl-indent-scope-test--extern-keyword-boundary #'c-mode))
+
+(ert-deftest c++-extern-keyword-boundary ()
+  "An `extern' suffix in an identifier must not hide a C++ block."
+  (hl-indent-scope-test--extern-keyword-boundary #'c++-mode))
+
+(ert-deftest c++-namespace-block-layouts ()
+  "Namespace blocks remain hidden when whitespace, comments or nesting vary."
+  (dolist (code-namespace
+           '("namespace foo {\n"
+             "namespace foo\n{\n"
+             "namespace foo /* comment */ {\n"
+             "namespace /* comment */ foo {\n"
+             "namespace {\n"
+             "namespace foo::bar {\n"
+             "inline namespace foo {\n"
+             "namespace foo::inline bar {\n"))
+    ;; Only the function may add a level, checking the depth instead of an
+    ;; empty tree ensures code that fails to parse can't pass the test.
+    (should
+     (equal
+      1
+      (hl-indent-scope-test--tree-depth
+       (hl-indent-scope-test--tree-from-code
+        #'c++-mode (concat code-namespace "int a(void)\n{\nfoo();\n}\n}\n")))))))
+
+(ert-deftest c++-namespace-keyword-boundary ()
+  "A `namespace' within an identifier must not hide a C++ block."
+  (dolist (code-block
+           '("struct mynamespace {\n"
+             "struct not_a_namespace_type {\n"
+             "class Foo : public Bar {\n"
+             "struct A::B {\n"))
+    ;; Both the outer block and the function add a level.
+    (should
+     (equal
+      2
+      (hl-indent-scope-test--tree-depth
+       (hl-indent-scope-test--tree-from-code
+        #'c++-mode (concat code-block "int a(void)\n{\nfoo();\n}\n}\n")))))))
 
 (ert-deftest c++-angle-brackets ()
   "Complex C test."

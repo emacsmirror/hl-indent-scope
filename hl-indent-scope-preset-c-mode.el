@@ -20,23 +20,15 @@
 (defsubst hl-indent-scope-preset-c-mode--is-top-level-extern ()
   "Return t when point is part of an `extern' block."
   (declare (important-return-value t))
-  (let* ((found nil)
-         (pos (1- (point)))
-         (ch (char-before pos)))
-
-    (while (memq ch '(?\s ?\t))
-      (decf pos)
-      (setq ch (char-before pos)))
-
-    (when (eq ch ?\")
-      ;; We have found `" {` which is likely to be an `extern'.
-      ;; Allow for slower logic here as it's likely to run _much_ less often
-      ;; than regular constructs (functions, conditionals, etc.).
-      (let ((str (buffer-substring-no-properties (pos-bol) pos)))
-        (when (string-match-p "[[:blank:]]*extern[[:blank:]]+\"[[:alpha:]]+\"" str)
-          (setq found t))))
-
-    found))
+  (save-excursion
+    ;; Move from after the opening brace to the preceding token, allowing
+    ;; whitespace and comments between it and the brace.
+    (backward-char 1)
+    (hl-indent-scope--skip-comments-backward)
+    ;; Step over the linkage, the `"C"' of `extern "C" {'.
+    (when (hl-indent-scope--skip-string-backward)
+      (hl-indent-scope--skip-comments-backward)
+      (hl-indent-scope--id-before-point-p "extern"))))
 
 (defun hl-indent-scope-preset-c-mode--show-block-fn (level)
   "Callback for `hl-indent-scope-show-block-fn' at LEVEL."
