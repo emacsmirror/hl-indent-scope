@@ -236,7 +236,7 @@ If we are not already inside an S-expression, leave BEG as-is."
       (let ((beg-next nil))
         (while (setq beg-next
                      (ignore-errors
-                       (nth 1 (syntax-ppss beg))))
+                       (ppss-innermost-start (syntax-ppss beg))))
           (push (setq beg beg-next) pos-list)))
       (save-excursion
         (while pos-list
@@ -252,7 +252,7 @@ If we are not already inside an S-expression, leave BEG as-is."
     (let ((beg-next nil))
       (while (setq beg-next
                    (ignore-errors
-                     (nth 1 (syntax-ppss beg))))
+                     (ppss-innermost-start (syntax-ppss beg))))
         (setq beg beg-next))
       beg))))
 
@@ -299,7 +299,7 @@ Argument LEVEL is the S-expression depth for `hl-indent-scope-show-block-fn'."
     (while (and (< (point) end-bound) (hl-indent-scope--next-sexp-by-syntax end-bound level))
       (let ((state (syntax-ppss)))
         ;; Skip strings & comments.
-        (unless (or (nth 3 state) (nth 4 state))
+        (unless (or (ppss-string-terminator state) (ppss-comment-depth state))
           (let ((pos-beg (point)))
             (let ((pos-end
                    (ignore-errors
@@ -347,7 +347,7 @@ character, it's only moved when a comment is skipped, to the result."
   (let* ((state (syntax-ppss))
          ;; Step from where a comment or string began, the point itself may be
          ;; the opener which the state only reports once it's stepped over.
-         (scan-beg (or (nth 8 state) (point))))
+         (scan-beg (or (ppss-comment-or-string-start state) (point))))
     (goto-char scan-beg)
     ;; Note that `forward-comment' returns nil for an un-terminated comment
     ;; even though it steps over it, so test the point.

@@ -88,7 +88,7 @@ Optional argument HAS-INDENT, when non-nil, skips the indentation check."
 
           (let ((state (syntax-ppss)))
             ;; Skip strings & comments.
-            (unless (or (nth 3 state) (nth 4 state))
+            (unless (or (ppss-string-terminator state) (ppss-comment-depth state))
               (let ((bol (pos-bol)))
                 (when (eq (match-beginning 1) bol)
                   (setq search nil)
@@ -112,10 +112,10 @@ Optional argument HAS-INDENT, when non-nil, skips the indentation check."
               ;;        text = """
               ;;    this line.
               ;;    """
-              ((nth 3 state)
-               (nth 8 state))
+              ((ppss-string-terminator state)
+               (ppss-comment-or-string-start state))
               (t
-               (nth 1 state)))))))
+               (ppss-innermost-start state)))))))
     (when container-beg
       (save-excursion
         (goto-char container-beg)
@@ -177,12 +177,12 @@ out of the begin/end bounds the caller is interested in."
           (forward-char 1)
           (let ((state (syntax-ppss)))
             ;; Skip strings & comments.
-            (unless (or (nth 3 state) (nth 4 state))
+            (unless (or (ppss-string-terminator state) (ppss-comment-depth state))
               ;; Not a comment, so assume this is the ':' that should be used.
               (setq search nil)
               (setq pos-result (point))
               ;; Check if this point is within brackets.
-              (let ((bracket-beg (nth 1 state)))
+              (let ((bracket-beg (ppss-innermost-start state)))
                 ;; Within brackets!
                 (when (and bracket-beg (< pos-init bracket-beg))
                   ;; Skip to the next bracket and keep looking.
@@ -219,7 +219,9 @@ Commands before BEG may be included depending on expansion."
         (let ((state (syntax-ppss)))
           ;; Skip strings & comments.
           ;; Also skip any text inside a nested block used for ternary operators and list comprehensions.
-          (unless (or (nth 3 state) (nth 4 state) (nth 1 state))
+          (unless (or (ppss-string-terminator state)
+                      (ppss-comment-depth state)
+                      (ppss-innermost-start state))
             (let ((match-beg (match-beginning 1))
                   (bol (pos-bol)))
               ;; Ensure the command is at the line beginning.
@@ -249,10 +251,10 @@ Commands before BEG may be included depending on expansion."
            ;; last complete S-expression, which lands just before the string
            ;; often enough to look correct, and is nil whenever the parse
            ;; resumed inside it.
-           ((nth 3 state)
-            (nth 8 state))
+           ((ppss-string-terminator state)
+            (ppss-comment-or-string-start state))
            (t
-            (nth 1 state)))))
+            (ppss-innermost-start state)))))
     ;; Check it began before the limit (the line beginning), which is what
     ;; makes this line a continuation of it rather than the start of one.
     (and container-beg (< container-beg limit))))

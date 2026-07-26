@@ -52,7 +52,7 @@ Argument USE-MATCH uses an existing match instead of a new search."
                                      t))))
       (let ((state (syntax-ppss)))
         ;; Skip strings & comments.
-        (unless (or (nth 3 state) (nth 4 state))
+        (unless (or (ppss-string-terminator state) (ppss-comment-depth state))
           (let* ((str-open (match-string 1))
                  (str-close (and (null str-open) (match-string 2))))
 
