@@ -785,6 +785,12 @@ checking the entire buffer."
 ;; ---------------------------------------------------------------------------
 ;; Internal Mode Management
 
+(defun hl-indent-scope--immediate-style-p ()
+  "Non-nil when the immediate style is in use."
+  (declare (important-return-value t))
+  ;; Note that `hl-indent-scope-idle-delay' may have changed since enabling.
+  (and (memq 'hl-indent-scope--font-lock-fontify-region (bound-and-true-p jit-lock-functions)) t))
+
 (defun hl-indent-scope--mode-enable ()
   "Turn on `hl-indent-scope-mode' for the current buffer."
   (declare (important-return-value nil))
@@ -831,7 +837,7 @@ checking the entire buffer."
   (kill-local-variable 'hl-indent-scope-fixed-width)
 
   (cond
-   ((<= hl-indent-scope-idle-delay 0.0)
+   ((hl-indent-scope--immediate-style-p)
     (hl-indent-scope--immediate-disable))
    (t
     (hl-indent-scope--idle-disable))))

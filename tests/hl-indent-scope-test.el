@@ -701,6 +701,27 @@ longer enabled to clean up after itself."
 
       (should (null (hl-indent-scope-test--from-overlays))))))
 
+(ert-deftest mode-disable-after-changing-the-idle-delay ()
+  "Disabling must undo the style that was enabled, not the current setting.
+`hl-indent-scope-idle-delay' selects between the immediate & timer
+styles, and may be changed while the mode is enabled, where the value no
+longer matches what is in use."
+  (dolist (delay-pair (list (cons 0.2175 0.0) (cons 0.0 0.2175)))
+    (let ((buf (generate-new-buffer "untitled.c")))
+      (with-current-buffer buf
+        (c-mode)
+        (insert "int a(void)\n" "{\n" "  foo();\n" "}\n")
+
+        (let ((hl-indent-scope-idle-delay (car delay-pair)))
+          (hl-indent-scope-mode))
+        ;; The delay is customized while the mode is enabled.
+        (let ((hl-indent-scope-idle-delay (cdr delay-pair)))
+          (hl-indent-scope-mode -1))
+
+        (let ((fns (bound-and-true-p jit-lock-functions)))
+          (should (null (memq 'hl-indent-scope--idle-font-lock-region-pending fns)))
+          (should (null (memq 'hl-indent-scope--font-lock-fontify-region fns))))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99
