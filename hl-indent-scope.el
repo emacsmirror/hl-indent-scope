@@ -217,13 +217,28 @@ If we are not already inside an S-expression, leave BEG as-is."
 ;; ---------------------------------------------------------------------------
 ;; Shared Functions
 
+(defun hl-indent-scope--overlays-remove-impl (pos-beg pos-end prop)
+  "Remove PROP overlays in the range POS-BEG to POS-END, nil for all of them.
+Note that all means the entire buffer (without narrowing)."
+  (declare (important-return-value nil))
+  (cond
+   ;; Widening first is what makes the defaults the whole buffer, otherwise
+   ;; they are the reachable part of it and overlays beyond the narrowing
+   ;; are left behind for good once the mode is disabled.
+   ((buffer-narrowed-p)
+    (save-restriction
+      (widen)
+      (remove-overlays pos-beg pos-end prop t)))
+   (t
+    (remove-overlays pos-beg pos-end prop t))))
+
 (defun hl-indent-scope--overlays-remove (&optional pos-beg pos-end)
   "Remove `hl-indent-scope' overlays from the current buffer.
 If optional arguments POS-BEG and POS-END exist,
 remove overlays from the range POS-BEG to POS-END.
 Otherwise remove all overlays."
   (declare (important-return-value nil))
-  (remove-overlays pos-beg pos-end 'hl-indent-scope t))
+  (hl-indent-scope--overlays-remove-impl pos-beg pos-end 'hl-indent-scope))
 
 
 ;; ---------------------------------------------------------------------------
@@ -627,7 +642,7 @@ If optional arguments POS-BEG and POS-END exist,
 remove overlays from the range POS-BEG to POS-END.
 Otherwise remove all overlays."
   (declare (important-return-value nil))
-  (remove-overlays pos-beg pos-end 'hl-indent-scope-pending t))
+  (hl-indent-scope--overlays-remove-impl pos-beg pos-end 'hl-indent-scope-pending))
 
 (defun hl-indent-scope--idle-handle-pending-ranges-impl (&optional all-beg all-end)
   "Handle pending ranges, using ALL-BEG and ALL-END to clamp regions.
@@ -804,7 +819,10 @@ checking the entire buffer."
   "Turn off `hl-indent-scope-mode' for the current buffer."
   (declare (important-return-value nil))
 
-  (remove-overlays (point-min) (point-max) 'hl-indent-scope t)
+  ;; NOTE: `remove-overlays' is handled by:
+  ;; - `hl-indent-scope--immediate-disable'
+  ;; - `hl-indent-scope--idle-disable'
+  ;; Below, both remove overlays.
 
   (kill-local-variable 'hl-indent-scope-show-block-fn)
   (kill-local-variable 'hl-indent-scope-indent-block-fn)

@@ -657,6 +657,50 @@ is in, which must not end the block there."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest mode-disable-while-narrowed ()
+  "Disabling the mode must remove every overlay, narrowing or not.
+Anything left outside the narrowing stays for good, the mode is no
+longer enabled to clean up after itself."
+  (let ((buf (generate-new-buffer "untitled.c")))
+    (with-current-buffer buf
+      (c-mode)
+      (setq-local tab-width 2)
+
+      (insert
+       "int a(void)\n"
+       "{\n"
+       "  if (x) {\n"
+       "    foo();\n"
+       "  }\n"
+       "}\n"
+       "\n"
+       "int b(void)\n"
+       "{\n"
+       "  if (y) {\n"
+       "    bar();\n"
+       "  }\n"
+       "}\n"
+       "\n"
+       "int c(void)\n"
+       "{\n"
+       "  if (z) {\n"
+       "    baz();\n"
+       "  }\n"
+       "}\n")
+
+      (hl-indent-scope-mode)
+      (hl-indent-scope-buffer)
+      (should (hl-indent-scope-test--from-overlays))
+
+      ;; Narrow to the middle function, as `narrow-to-region' does,
+      ;; leaving overlays on both sides of it.
+      (narrow-to-region
+       (hl-indent-scope-test--pos-from-line 8) (hl-indent-scope-test--pos-from-line 14))
+      (hl-indent-scope-mode -1)
+      (widen)
+
+      (should (null (hl-indent-scope-test--from-overlays))))))
+
 (provide 'hl-indent-scope-test)
 ;; Local Variables:
 ;; fill-column: 99
