@@ -5,7 +5,7 @@ Highlight Indent Scope
 This package highlights indentation based on scope (defined by the syntax-table).
 
 C & C-like language syntax is well supported as well as Lisps.
-Support is also included for CMake and Python.
+Support is also included for CMake, fish-shell, GNU Make, Lua and Python.
 
 .. This is a PNG image.
 
@@ -50,6 +50,21 @@ Supported Languages
 
 ``cmake-mode``
    A custom-preset has been included to support CMake.
+
+``fish-mode``
+   A custom-preset has been included to support fish-shell.
+
+   - ``case`` clauses are given their own level, matching ``fish_indent``.
+
+``lua-mode``
+   A custom-preset has been included to support Lua.
+
+   - The body of an ``if`` begins after its ``then``, the body of a ``function`` after its parameters.
+
+``makefile-gmake-mode``
+   A custom-preset has been included to support GNU Make.
+
+   - Conditionals & ``define`` blocks are highlighted.
 
 ``python-mode``
    A custom-preset has been included to support Python.
@@ -160,7 +175,7 @@ The package is available in melpa as ``hl-indent-scope``, here is an example wit
 
    (use-package hl-indent-scope
      :commands (hl-indent-scope-mode)
-     :hook ((c-mode c++-mode cmake-mode python-mode emacs-lisp-mode) . hl-indent-scope-mode))
+     :hook ((c-mode c++-mode cmake-mode fish-mode lua-mode makefile-gmake-mode python-mode emacs-lisp-mode) . hl-indent-scope-mode))
 
 
 Further Work
