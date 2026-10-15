@@ -1651,6 +1651,22 @@ is in, which must not end the block there."
             (code-str-result (hl-indent-scope-test--do-test-on-current-buffer ?$ ?@)))
         (should (equal code-str-expect code-str-result))))))
 
+(ert-deftest python-comment-ending-the-buffer ()
+  "A comment on the last line, without a line ending, must not hang.
+This is typical while typing, where the comment is the first line of a block,
+the result must match the same buffer with a line ending."
+  (should
+   (equal
+    '(((11 . 11)))
+    (hl-indent-scope-test--tree-from-code #'python-mode "def foo():\n    # comment")))
+  (should
+   (equal
+    '(((11 . 11))) (hl-indent-scope-test--tree-from-code #'python-mode "def foo():\n# comment")))
+  (should
+   (equal
+    '(((21 . 21)) ((6 . 15)))
+    (hl-indent-scope-test--tree-from-code #'python-mode "if x:\n    pass\nelse:\n    # todo"))))
+
 (ert-deftest mode-disable-while-narrowed ()
   "Disabling the mode must remove every overlay, narrowing or not.
 Anything left outside the narrowing stays for good, the mode is no

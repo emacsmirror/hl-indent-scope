@@ -354,11 +354,11 @@ The result must be greater than IDENT-OFS, otherwise return nil."
             (let ((ident-curr (skip-chars-forward "[:blank:]" (point-max))))
               (cond
                ((hl-indent-scope-preset-python--is-comment-at-point (point))
-                (cond
-                 ((zerop (forward-line 1))
-                  (goto-char (pos-bol)))
-                 (t
-                  (setq search nil))))
+                ;; NOTE: on the last line without a line ending (typically the line
+                ;; being typed), `forward-line' moves to its end & still returns zero,
+                ;; so check the next line was reached, otherwise this never ends.
+                (unless (and (zerop (forward-line 1)) (bolp))
+                  (setq search nil)))
                (t
                 ;; Non-comment, non-space character;
                 ;; terminate the loop and set the indentation level.

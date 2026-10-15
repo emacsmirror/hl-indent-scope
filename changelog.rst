@@ -10,6 +10,7 @@ Change Log
   - Add a preset for Lua.
   - Fix CMake block commands within the arguments of another command being taken for blocks.
   - Fix a CMake block left open (while it's being typed) taking the close of the block around it.
+  - Fix a hang in Python when the last line is a comment without a line ending (typically while it's being typed).
   - Properly highlight ``async def`` for Python.
   - Don't calculate indentation for multi-line strings in Python.
   - Fix error highlighting indentation when un-indented blocks were found (where indentation levels were not in-order).
